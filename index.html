@@ -7,7 +7,7 @@
 <style>
   :root{
     --blue:#3460FB; --blue-200:#C5D7FB; --blue-50:#E8F1FE;
-    --orange:#FB5B01; --cyan:#00A3BF; --green:#259D63; --green-50:#E8F6EF; --red:#FE3939;
+    --orange:#FB5B01; --cyan:#00A3BF; --green:#259D63; --green-50:#E8F6EF; --red:#FE3939; --purple:#7B61FF;
     --ink:#1A1A2E; --sub:#5B6472; --line:#E5E7EB; --bg:#F5F7FB; --card:#fff;
     --shadow:0 1px 3px rgba(20,30,60,.08),0 1px 2px rgba(20,30,60,.04);
   }
@@ -115,9 +115,10 @@
   .rd-summary{background:var(--blue-50);border:1px solid var(--blue-200);border-radius:10px;padding:12px 14px;font-size:13.5px;font-weight:700;line-height:1.7}
   .rd-summary span{color:var(--blue);font-size:15px}
 
-  .seg{display:inline-flex;gap:4px;background:#eef1f6;padding:4px;border-radius:11px;margin-bottom:16px;flex-wrap:wrap}
-  .seg-btn{border:none;background:transparent;color:var(--sub);font-family:inherit;font-size:13px;font-weight:700;padding:8px 18px;border-radius:8px;cursor:pointer}
-  .seg-btn.active{background:#fff;color:var(--green);box-shadow:var(--shadow)}
+  .acct-in th,.acct-in td{text-align:left;vertical-align:middle}
+  .acct-in input{width:78px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:14px;text-align:right;margin-right:4px}
+  .acct-in .acct-name{font-weight:700;white-space:nowrap}
+  .acct-in .acct-tax{color:var(--sub);font-size:12px}
 </style>
 </head>
 <body>
@@ -256,20 +257,8 @@
   <!-- ============ 資産運用タブ ============ -->
   <div class="tab-panel inv" id="panel-invest" style="display:none">
     <section class="card inv">
-      <h2><span class="dot"></span>積立条件（オルカン等のインデックス投資イメージ）</h2>
-      <div class="seg" id="acc_seg">
-        <button class="seg-btn active" data-acc="nisa">NISA（非課税）</button>
-        <button class="seg-btn" data-acc="tokutei">特定口座（課税）</button>
-        <button class="seg-btn" data-acc="ideco">iDeCo</button>
-      </div>
+      <h2><span class="dot"></span>共通条件（特定・NISA・iDeCo に分散投資）</h2>
       <div class="inputs">
-        <div class="field">
-          <label>毎月の積立額 <span class="val"><span id="iv_monthly">10</span><small>万円</small></span></label>
-          <div class="badges" id="b_imonthly"></div>
-          <input type="range" id="ir_monthly" min="0" max="50" step="1" value="10">
-          <div class="ticks"><span>0</span><span>50万</span></div>
-          <div class="numrow"><input type="number" id="in_monthly" min="0" max="300" step="1" value="10"><span>万円/月</span></div>
-        </div>
         <div class="field">
           <label>想定年利（リターン・税引前） <span class="val"><span id="iv_rate">5.0</span><small>%</small></span></label>
           <div class="badges" id="b_irate"></div>
@@ -285,12 +274,6 @@
           <div class="numrow"><input type="number" id="in_years" min="1" max="50" step="1" value="39"><span>年</span></div>
         </div>
         <div class="field">
-          <label>初期投資額（一時金） <span class="val"><span id="iv_init">0</span><small>万円</small></span></label>
-          <input type="range" id="ir_init" min="0" max="5000" step="50" value="0">
-          <div class="ticks"><span>0</span><span>5000万</span></div>
-          <div class="numrow"><input type="number" id="in_init" min="0" max="50000" step="50" value="0"><span>万円</span></div>
-        </div>
-        <div class="field">
           <label>信託報酬（年率・手数料） <span class="val"><span id="iv_exp">0.10</span><small>%</small></span></label>
           <input type="range" id="ir_exp" min="0" max="2" step="0.01" value="0.1">
           <div class="ticks"><span>0%</span><span>2%</span></div>
@@ -303,19 +286,34 @@
           <div class="numrow"><input type="number" id="in_tax" min="0" max="55" step="1" value="20"><span>%</span></div>
         </div>
       </div>
-      <div class="note">信託報酬は評価額に対し毎年かかる運用コスト（オルカンは約0.05775%）。特定口座は売却益に20.315%課税。iDeCoは口座管理手数料171円/月＋掛金が全額所得控除（節税）。受取時は退職所得控除等の範囲内で非課税と仮定。</div>
+      <div class="note">信託報酬は評価額に対し毎年かかる運用コスト（オルカンは約0.05775%）。特定は売却益に20.315%課税。iDeCoは口座管理手数料171円/月＋掛金が全額所得控除（節税）。受取時は退職所得控除等の範囲内で非課税と仮定。</div>
     </section>
 
     <section class="card inv">
-      <h2><span class="dot"></span>運用結果サマリー（<span id="iv_yr2">39</span>年後の受取額）</h2>
+      <h2><span class="dot"></span>口座別の積立額・初期投資額</h2>
+      <div style="overflow:auto">
+        <table class="acct-in">
+          <thead><tr><th>口座</th><th>毎月の積立</th><th>初期投資額（現在残高）</th><th>税の扱い</th></tr></thead>
+          <tbody>
+            <tr><td class="acct-name">特定口座</td><td><input type="number" id="im_tok" min="0" max="100" step="0.5" value="0">万円/月</td><td><input type="number" id="ii_tok" min="0" max="50000" step="10" value="0">万円</td><td class="acct-tax">売却益に20.315%課税</td></tr>
+            <tr><td class="acct-name">NISA（非課税）</td><td><input type="number" id="im_nisa" min="0" max="100" step="0.5" value="10">万円/月</td><td><input type="number" id="ii_nisa" min="0" max="50000" step="10" value="250">万円</td><td class="acct-tax">運用益すべて非課税</td></tr>
+            <tr><td class="acct-name">iDeCo<br><span class="acct-tax">上限2.3万/月</span></td><td><input type="number" id="im_ideco" min="0" max="2.3" step="0.1" value="2.3">万円/月</td><td><input type="number" id="ii_ideco" min="0" max="50000" step="10" value="150">万円</td><td class="acct-tax">掛金が全額所得控除＋運用益非課税</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note">毎月の積立をそれぞれの口座に分散して入力してください。iDeCoの掛金は会社員（企業年金なし）の上限 月2.3万円まで。初期投資額は各口座の現在残高（一時金）。</div>
+    </section>
+
+    <section class="card inv">
+      <h2><span class="dot"></span>合計結果（<span id="iv_yr2">39</span>年後）</h2>
       <div class="kpis">
-        <div class="kpi g"><div class="k">受取額（税・手数料考慮）</div><div class="v"><span id="ik_final">–</span><span class="u">円</span></div><div class="k" id="ik_finalsub" style="margin-top:3px"></div></div>
-        <div class="kpi sub"><div class="k">元本（拠出総額）</div><div class="v"><span id="ik_principal">–</span><span class="u">円</span></div></div>
-        <div class="kpi sub"><div class="k">手取り運用益</div><div class="v"><span id="ik_gain">–</span><span class="u">円</span></div></div>
-        <div class="kpi sub"><div class="k">元本に対する倍率</div><div class="v"><span id="ik_mult">–</span><span class="u">倍</span></div></div>
+        <div class="kpi g"><div class="k">受取額（手取り合計）</div><div class="v"><span id="ik_final">–</span><span class="u">円</span></div><div class="k" id="ik_finalsub" style="margin-top:3px"></div></div>
+        <div class="kpi sub"><div class="k">元本合計（拠出総額）</div><div class="v"><span id="ik_principal">–</span><span class="u">円</span></div></div>
+        <div class="kpi sub"><div class="k">手取り運用益 合計</div><div class="v"><span id="ik_gain">–</span><span class="u">円</span></div></div>
+        <div class="kpi sub"><div class="k">毎月の積立 合計</div><div class="v"><span id="ik_monthly">–</span><span class="u">万円</span></div></div>
       </div>
       <div style="overflow:auto;margin-top:16px">
-        <table><thead><tr><th>口座種別</th><th>受取額（手取り）</th><th>運用益（手取り）</th><th>備考</th></tr></thead><tbody id="acc_body"></tbody></table>
+        <table><thead><tr><th>口座</th><th>毎月</th><th>初期</th><th>受取額（手取り）</th><th>運用益（手取り）</th><th>備考</th></tr></thead><tbody id="acc_body"></tbody></table>
       </div>
     </section>
 
@@ -323,8 +321,8 @@
       <h2><span class="dot"></span>資産の推移（何年後にいくら）</h2>
       <div class="charts">
         <div class="chartbox">
-          <div class="chart-head"><span class="t">評価額の推移（万円）</span>
-            <div class="legend"><span><i style="background:var(--green)"></i>評価額</span><span><i style="background:#B7C0CF"></i>元本</span></div></div>
+          <div class="chart-head"><span class="t">口座別 評価額の推移（積み上げ＝合計・万円）</span>
+            <div class="legend"><span><i style="background:var(--cyan)"></i>特定</span><span><i style="background:var(--green)"></i>NISA</span><span><i style="background:var(--purple)"></i>iDeCo</span></div></div>
           <canvas id="c_invest"></canvas><div class="chart-tip" id="tip_invest"></div>
         </div>
         <div class="chartbox">
@@ -334,11 +332,11 @@
         </div>
       </div>
       <div class="verdict" id="verdict"></div>
-      <div class="note">比較は「ローン返済タブの借入条件」に対し、毎月の積立額と同額を<b>繰上返済（期間短縮型）に回した場合の利息軽減額（累計）</b>と、<b>同額を投資した場合の手取り運用益</b>を並べています。投資は想定利回りでの試算で<b>元本割れリスク</b>があり、繰上返済は確実な利息削減です。</div>
+      <div class="note">比較は「ローン返済タブの借入条件」に対し、毎月の積立合計と同額を<b>繰上返済（期間短縮型）に回した場合の利息軽減額（累計）</b>と、<b>同額を3口座へ投資した場合の手取り運用益</b>を並べています（初期一時金は除く毎月分のみ）。投資は<b>元本割れリスク</b>あり、繰上返済は確実な利息削減です。</div>
     </section>
 
     <section class="card inv">
-      <h2><span class="dot"></span>資産推移表</h2>
+      <h2><span class="dot"></span>資産推移表（3口座合計）</h2>
       <div class="tbl-wrap">
         <table><thead><tr><th>経過</th><th>年間積立</th><th>累計元本</th><th>含み益</th><th>評価額</th></tr></thead><tbody id="inv_body"></tbody></table>
       </div>
@@ -358,6 +356,7 @@ const man = n => Math.round(n/10000).toLocaleString('ja-JP');
 const COL = {blue:'#3460FB',orange:'#FB5B01',cyan:'#00A3BF',green:'#259D63',red:'#FE3939',purple:'#7B61FF',gray:'#B7C0CF'};
 const PLAN_COLORS = [COL.cyan,COL.purple,COL.red,COL.orange,COL.green];
 const TAXRATE = 0.20315; // 譲渡益課税(所得税15%+住民税5%+復興税)
+const IDECO_CAP_MAN = 2.3; // iDeCo 会社員(企業年金なし)の掛金上限 月2.3万円
 
 function termStr(months){ if(months<=0)return '–'; const y=Math.floor(months/12),m=months%12; return (y?y+'年':'')+(m?m+'ヶ月':(y?'':'0ヶ月')); }
 function payoffDate(sy,sm,months){ const idx=(sm-1)+(months-1); return {y:sy+Math.floor(idx/12), m:idx%12+1}; }
@@ -506,7 +505,7 @@ function syncPair(rangeId,numId,labelId,fmt,onChange){ const r=$(rangeId),nu=$(n
   r.addEventListener('input',()=>upd('r')); nu.addEventListener('input',()=>upd('n')); }
 
 /* ===================== ローンタブ ===================== */
-const LS_INPUT='loansim_input_v3', LS_PLANS='loansim_plans_v3', LS_INV='loansim_invest_v2';
+const LS_INPUT='loansim_input_v3', LS_PLANS='loansim_plans_v3', LS_INV='loansim_invest_v4';
 let prepayments=[], lastResult=null, lastAgg=null;
 const balChart=new Chart($('c_balance'),$('tip_balance'),'line');
 const brkChart=new Chart($('c_break'),$('tip_break'),'bar');
@@ -605,43 +604,51 @@ function renderCompare(){const sel=getSelectedPlans(),wrap=$('cmp_wrap');if(!sel
   $('cmp_body').innerHTML=rd.map(r=>`<tr><td>${r[0]}</td>`+cols.map(c=>`<td class="${c.me?'me':''}">${r[1](c)}</td>`).join('')+'</tr>').join('');
 }
 
-/* ===================== 資産運用タブ ===================== */
-const invChart=new Chart($('c_invest'),$('tip_invest'),'line');
+/* ===================== 資産運用タブ（3口座同時・合計） ===================== */
+const invChart=new Chart($('c_invest'),$('tip_invest'),'bar');
 const cmpChart=new Chart($('c_cmp'),$('tip_cmp'),'line');
-let invAccount='nisa';
-function readInvest(){return {monthlyMan:+$('in_monthly').value||0,ratePct:+$('in_rate').value||0,years:+$('in_years').value||1,
-  initMan:+$('in_init').value||0,expensePct:+$('in_exp').value||0,taxRate:+$('in_tax').value||0,account:invAccount};}
+function readInvest(){return {
+  ratePct:+$('in_rate').value||0, years:+$('in_years').value||1, expensePct:+$('in_exp').value||0, taxRate:+$('in_tax').value||0,
+  tok:{m:+$('im_tok').value||0, init:+$('ii_tok').value||0},
+  nisa:{m:+$('im_nisa').value||0, init:+$('ii_nisa').value||0},
+  ideco:{m:Math.min(IDECO_CAP_MAN,+$('im_ideco').value||0), init:+$('ii_ideco').value||0}
+};}
 
-function recalcInvest(){ const inp=readInvest(); updateBadges('b_irate',inp.ratePct);
-  updateBadges('b_imonthly',inp.monthlyMan); updateBadges('b_iyears',inp.years);
-  const monthly=Math.round(inp.monthlyMan*10000), init=Math.round(inp.initMan*10000);
-  const simNoFee=investSim(monthly,inp.ratePct,inp.years,init,{expensePct:inp.expensePct});
-  const simIdeco=investSim(monthly,inp.ratePct,inp.years,init,{expensePct:inp.expensePct,monthlyFee:171});
-  const nisaTake=simNoFee.final, nisaGain=simNoFee.gain;
-  const tokuTax=Math.max(0,simNoFee.gain)*TAXRATE, tokuTake=simNoFee.final-tokuTax, tokuGain=nisaGain-tokuTax;
-  const idecoSave=simIdeco.contrib*(inp.taxRate/100), idecoTake=simIdeco.final, idecoGain=simIdeco.gain+idecoSave;
-  const sel=inp.account, mainSim=sel==='ideco'?simIdeco:simNoFee;
-  let take,gain,sub;
-  if(sel==='nisa'){take=nisaTake;gain=nisaGain;sub='NISA：運用益すべて非課税';}
-  else if(sel==='tokutei'){take=tokuTake;gain=tokuGain;sub=`特定口座：売却益に20.315%課税後（税 約${man(tokuTax)}万円）`;}
-  else {take=idecoTake;gain=idecoGain;sub=`iDeCo：節税 約${man(idecoSave)}万円含む（手数料171円/月控除済）`;}
-  $('iv_yr2').textContent=inp.years;
-  $('ik_final').textContent=yen(take); $('ik_finalsub').textContent=sub;
-  $('ik_principal').textContent=yen(mainSim.contrib); $('ik_gain').textContent=yen(gain);
-  $('ik_mult').textContent=mainSim.contrib>0?(take/mainSim.contrib).toFixed(2):'–';
+function recalcInvest(){ const inp=readInvest(); updateBadges('b_irate',inp.ratePct); updateBadges('b_iyears',inp.years);
+  const rate=inp.ratePct, years=inp.years, months=years*12, exp=inp.expensePct;
+  const tokM=Math.round(inp.tok.m*10000), nisaM=Math.round(inp.nisa.m*10000), idecoM=Math.round(inp.ideco.m*10000);
+  const simTok =investSim(tokM, rate,years,Math.round(inp.tok.init*10000),{expensePct:exp});
+  const simNisa=investSim(nisaM,rate,years,Math.round(inp.nisa.init*10000),{expensePct:exp});
+  const simIdeco=investSim(idecoM,rate,years,Math.round(inp.ideco.init*10000),{expensePct:exp,monthlyFee:171});
+  const tokTax=Math.max(0,simTok.gain)*TAXRATE, tokTake=simTok.final-tokTax, tokGain=simTok.gain-tokTax;
+  const nisaTake=simNisa.final, nisaGain=simNisa.gain;
+  const idecoSave=idecoM*months*(inp.taxRate/100), idecoTake=simIdeco.final+idecoSave, idecoGain=simIdeco.gain+idecoSave;
+  const totTake=tokTake+nisaTake+idecoTake, totContrib=simTok.contrib+simNisa.contrib+simIdeco.contrib, totGain=tokGain+nisaGain+idecoGain;
+  const totMonthlyMan=inp.tok.m+inp.nisa.m+inp.ideco.m;
+  $('iv_yr2').textContent=years;
+  $('ik_final').textContent=yen(totTake);
+  $('ik_finalsub').textContent=`特定+NISA+iDeCo の手取り合計（税・手数料・iDeCo節税 約${man(idecoSave)}万円 反映）`;
+  $('ik_principal').textContent=yen(totContrib); $('ik_gain').textContent=yen(totGain);
+  $('ik_monthly').textContent=(Math.round(totMonthlyMan*10)/10).toLocaleString();
   const accs=[
-    {k:'nisa',name:'NISA（非課税）',take:nisaTake,gain:nisaGain,note:'運用益すべて非課税'},
-    {k:'tokutei',name:'特定口座',take:tokuTake,gain:tokuGain,note:`売却益に20.315%課税`},
-    {k:'ideco',name:'iDeCo',take:idecoTake,gain:idecoGain,note:`掛金所得控除で節税 約${man(idecoSave)}万円（受取時は控除内と仮定）`}];
-  $('acc_body').innerHTML=accs.map(a=>`<tr style="${a.k===sel?'background:var(--green-50)':''}"><td style="font-weight:700">${a.name}</td><td style="font-weight:700;color:var(--green)">${yen(a.take)}円</td><td>${yen(a.gain)}円</td><td style="color:var(--sub);font-size:12px;text-align:left">${a.note}</td></tr>`).join('');
-  const labels=[]; for(let e=0;e<=inp.years;e++)labels.push(e===0?'開始':e+'年');
-  invChart.set({labels,series:[
-    {name:'評価額',color:COL.green,width:2.8,fill:'rgba(37,157,99,0.12)',data:mainSim.valLine.map(v=>v/10000)},
-    {name:'元本',color:COL.gray,width:2,data:mainSim.conLine.map(v=>v/10000)}],
-    tipFmt:idx=>{const v=mainSim.valLine[idx],c=mainSim.conLine[idx];return `<b>${idx}年後</b>`+
-      `<div class="row"><i style="background:${COL.green}"></i>評価額: ${man(v)}万円</div><div class="row"><i style="background:${COL.gray}"></i>元本: ${man(c)}万円</div><div class="row" style="opacity:.85">含み益: ${man(v-c)}万円</div>`;}});
-  drawCompareChart(inp,mainSim,sel);
-  saveInvest(inp); renderInvTable(mainSim);
+    {name:'特定口座',m:inp.tok.m,init:inp.tok.init,take:tokTake,gain:tokGain,note:`売却益に20.315%課税（税 約${man(tokTax)}万円）`},
+    {name:'NISA（非課税）',m:inp.nisa.m,init:inp.nisa.init,take:nisaTake,gain:nisaGain,note:`運用益すべて非課税`},
+    {name:'iDeCo',m:inp.ideco.m,init:inp.ideco.init,take:idecoTake,gain:idecoGain,note:`上限2.3万/月・節税約${man(idecoSave)}万円含む・手数料171円/月`}];
+  $('acc_body').innerHTML=accs.map(a=>`<tr><td style="font-weight:700">${a.name}</td><td>${a.m}万</td><td>${a.init}万</td><td style="font-weight:700;color:var(--green)">${yen(a.take)}円</td><td>${yen(a.gain)}円</td><td style="color:var(--sub);font-size:12px;text-align:left">${a.note}</td></tr>`).join('')
+    +`<tr style="background:var(--green-50)"><td style="font-weight:800">合計</td><td style="font-weight:700">${Math.round(totMonthlyMan*10)/10}万</td><td style="font-weight:700">${inp.tok.init+inp.nisa.init+inp.ideco.init}万</td><td style="font-weight:800;color:var(--green)">${yen(totTake)}円</td><td style="font-weight:700">${yen(totGain)}円</td><td style="text-align:left;color:var(--sub);font-size:12px">3口座合計</td></tr>`;
+  const labels=[]; for(let e=1;e<=years;e++)labels.push(e+'年');
+  invChart.set({labels,segments:[
+    {name:'特定',color:COL.cyan,data:simTok.valLine.slice(1).map(v=>v/10000)},
+    {name:'NISA',color:COL.green,data:simNisa.valLine.slice(1).map(v=>v/10000)},
+    {name:'iDeCo',color:COL.purple,data:simIdeco.valLine.slice(1).map(v=>v/10000)}],
+    tipFmt:idx=>{const e=idx+1,t=simTok.valLine[e],n=simNisa.valLine[e],i=simIdeco.valLine[e];
+      return `<b>${e}年後</b> 合計 ${man(t+n+i)}万円`+
+        `<div class="row"><i style="background:${COL.cyan}"></i>特定: ${man(t)}万</div><div class="row"><i style="background:${COL.green}"></i>NISA: ${man(n)}万</div><div class="row"><i style="background:${COL.purple}"></i>iDeCo: ${man(i)}万</div>`;}});
+  const yearly=[]; for(let e=1;e<=years;e++){const t=simTok.yearly[e-1],n=simNisa.yearly[e-1],ic=simIdeco.yearly[e-1];
+    const val=t.val+n.val+ic.val, con=t.contrib+n.contrib+ic.contrib;
+    yearly.push({e,val,contrib:con,gain:val-con,yearContrib:t.yearContrib+n.yearContrib+ic.yearContrib});}
+  drawCompareChart(inp);
+  saveInvest(inp); renderInvTable(yearly);
 }
 function loanInterestSavedCurve(loanInp, monthlyExtraYen, maxYears){
   const P=Math.round(loanInp.principalMan*10000), opt=bandsOpt(loanInp.red);
@@ -652,28 +659,36 @@ function loanInterestSavedCurve(loanInp, monthlyExtraYen, maxYears){
   const curve=[0]; for(let e=1;e<=maxYears;e++)curve.push(Math.max(0,cum(base.rows,e)-cum(pre.rows,e)));
   return {curve,totalSaved:base.totalInterest-pre.totalInterest,preMonths:pre.months,baseMonths:base.months};
 }
-function drawCompareChart(inp,mainSim,sel){
-  const loanInp=readLoan(), monthlyExtra=Math.round(inp.monthlyMan*10000), maxYears=inp.years;
-  const saved=loanInterestSavedCurve(loanInp,monthlyExtra,maxYears);
+function drawCompareChart(inp){
+  const loanInp=readLoan(), maxYears=inp.years, rate=inp.ratePct, exp=inp.expensePct;
+  const tokM=Math.round(inp.tok.m*10000), nisaM=Math.round(inp.nisa.m*10000), idecoM=Math.round(inp.ideco.m*10000);
+  const totMonthly=tokM+nisaM+idecoM;
+  const saved=loanInterestSavedCurve(loanInp,totMonthly,maxYears);
+  // 毎月分のみ（初期一時金は除外）で各口座の手取り運用益を合算＝公平比較
+  const cT=investSim(tokM,rate,maxYears,0,{expensePct:exp});
+  const cN=investSim(nisaM,rate,maxYears,0,{expensePct:exp});
+  const cI=investSim(idecoM,rate,maxYears,0,{expensePct:exp,monthlyFee:171});
   const netGain=[0];
-  for(let e=1;e<=maxYears;e++){ const y=mainSim.yearly[e-1]; let g=y?y.gain:0;
-    if(sel==='tokutei') g=Math.max(0,g)*(1-TAXRATE);
-    else if(sel==='ideco') g=g+(y?y.contrib:0)*(inp.taxRate/100);
-    netGain.push(g); }
+  for(let e=1;e<=maxYears;e++){
+    const gT=cT.yearly[e-1].gain, gTn=gT-Math.max(0,gT)*TAXRATE;
+    const gN=cN.yearly[e-1].gain;
+    const gI=cI.yearly[e-1].gain + cI.yearly[e-1].contrib*(inp.taxRate/100);
+    netGain.push(gTn+gN+gI);
+  }
   const labels=[]; for(let e=0;e<=maxYears;e++)labels.push(e===0?'開始':e+'年');
   cmpChart.set({labels,series:[
     {name:'投資の手取り運用益',color:COL.green,width:2.6,data:netGain.map(v=>v/10000)},
     {name:'繰上返済の利息軽減',color:COL.blue,width:2.6,data:saved.curve.map(v=>v/10000)}],
     tipFmt:idx=>`<b>${idx}年後</b><div class="row"><i style="background:${COL.green}"></i>投資の手取り運用益: ${man(netGain[idx])}万円</div><div class="row"><i style="background:${COL.blue}"></i>利息軽減: ${man(saved.curve[idx])}万円</div>`});
   const gF=netGain[maxYears], sF=saved.curve[maxYears], diff=gF-sF, win=diff>=0?'投資':'繰上返済';
-  const accName={nisa:'NISA',tokutei:'特定口座',ideco:'iDeCo'}[sel];
-  $('verdict').innerHTML=`毎月 <b>${inp.monthlyMan}万円</b> を ${maxYears}年間：<br>`+
-    `📈 投資（${accName}・年利${inp.ratePct}%・手数料${inp.expensePct}%）の手取り運用益 ＝ <b>約${man(gF)}万円</b>　／　🏠 繰上返済の利息軽減 ＝ <b>約${man(sF)}万円</b>`+
+  const totMan=Math.round(totMonthly/1000)/10;
+  $('verdict').innerHTML=`毎月 <b>${totMan}万円</b>（3口座合計）を ${maxYears}年間（初期一時金は除く毎月分のみで比較）：<br>`+
+    `📈 投資（年利${rate}%・手数料${exp}%）の手取り運用益 ＝ <b>約${man(gF)}万円</b>　／　🏠 繰上返済の利息軽減 ＝ <b>約${man(sF)}万円</b>`+
     `（繰上で約${termStr(saved.baseMonths-saved.preMonths)}短縮）<br>→ 単純比較では <b style="color:${diff>=0?'var(--green)':'var(--blue)'}">${win}が約${man(Math.abs(diff))}万円 有利</b>。`+
     `<span style="color:var(--sub)"> 投資は元本割れの可能性あり、繰上返済は確実。リスク許容度で判断を。</span>`;
 }
-function renderInvTable(mainSim){ const body=$('inv_body');body.innerHTML='';
-  mainSim.yearly.forEach(y=>{const tr=document.createElement('tr');
+function renderInvTable(yearly){ const body=$('inv_body');body.innerHTML='';
+  yearly.forEach(y=>{const tr=document.createElement('tr');
     tr.innerHTML=`<td>${y.e}年後</td><td>${yen(y.yearContrib)}</td><td>${yen(y.contrib)}</td><td>${yen(y.gain)}</td><td style="font-weight:700;color:var(--green)">${yen(y.val)}</td>`;body.appendChild(tr);});
 }
 
@@ -687,14 +702,16 @@ function applyLoan(inp){ $('n_principal').value=inp.principalMan;$('r_principal'
   const rd=inp.red||{}; $('rd_on').checked=!!rd.on; ['zeh','a','b','iji','area2','area1','iju','chuko','young'].forEach(k=>$('rd_'+k).checked=!!rd[k]);
   $('rd_kids').value=rd.kids||0; $('rd_body').style.display=rd.on?'':'none';
   prepayments=(inp.prepayments||[]).map(p=>({...p})); }
-function applyInvest(inp){ $('in_monthly').value=inp.monthlyMan;$('ir_monthly').value=Math.min(50,inp.monthlyMan);
-  $('in_rate').value=inp.ratePct;$('ir_rate').value=Math.min(10,inp.ratePct); $('in_years').value=inp.years;$('ir_years').value=Math.min(50,inp.years);
-  $('in_init').value=inp.initMan;$('ir_init').value=Math.min(5000,inp.initMan);
-  $('in_exp').value=inp.expensePct;$('ir_exp').value=Math.min(2,inp.expensePct); $('in_tax').value=inp.taxRate;$('ir_tax').value=Math.min(55,Math.max(5,inp.taxRate));
-  invAccount=inp.account||'nisa';
-  $('iv_monthly').textContent=inp.monthlyMan;$('iv_rate').textContent=(+inp.ratePct).toFixed(1);$('iv_years').textContent=inp.years;
-  $('iv_init').textContent=(+inp.initMan).toLocaleString();$('iv_exp').textContent=(+inp.expensePct).toFixed(2);$('iv_tax').textContent=inp.taxRate;
-  $('acc_seg').querySelectorAll('.seg-btn').forEach(b=>b.classList.toggle('active',b.dataset.acc===invAccount)); }
+function applyInvest(inp){
+  $('in_rate').value=inp.ratePct;$('ir_rate').value=Math.min(10,inp.ratePct);
+  $('in_years').value=inp.years;$('ir_years').value=Math.min(50,inp.years);
+  $('in_exp').value=inp.expensePct;$('ir_exp').value=Math.min(2,inp.expensePct);
+  $('in_tax').value=inp.taxRate;$('ir_tax').value=Math.min(55,Math.max(5,inp.taxRate));
+  $('im_tok').value=inp.tok.m;$('ii_tok').value=inp.tok.init;
+  $('im_nisa').value=inp.nisa.m;$('ii_nisa').value=inp.nisa.init;
+  $('im_ideco').value=inp.ideco.m;$('ii_ideco').value=inp.ideco.init;
+  $('iv_rate').textContent=(+inp.ratePct).toFixed(1);$('iv_years').textContent=inp.years;
+  $('iv_exp').textContent=(+inp.expensePct).toFixed(2);$('iv_tax').textContent=inp.taxRate; }
 
 let curTab='loan';
 function activateTab(name){ curTab=name;
@@ -707,34 +724,28 @@ function init(){ const now=new Date(); $('today').textContent=`${now.getFullYear
     red:{on:false,zeh:false,a:false,b:false,iji:false,area2:false,area1:false,iju:false,chuko:false,kids:0,young:false},prepayments:[]};
   try{const s=JSON.parse(localStorage.getItem(LS_INPUT));if(s&&s.principalMan){li=s; if(!li.red)li.red={on:false};}}catch(e){}
   applyLoan(li);
-  let ii={monthlyMan:10,ratePct:5,years:39,initMan:0,expensePct:0.1,taxRate:20,account:'nisa'};
-  try{const s=JSON.parse(localStorage.getItem(LS_INV));if(s&&s.monthlyMan!=null)ii=Object.assign(ii,s);}catch(e){}
+  let ii={ratePct:5,years:39,expensePct:0.1,taxRate:20,tok:{m:0,init:0},nisa:{m:10,init:250},ideco:{m:2.3,init:150}};
+  try{const s=JSON.parse(localStorage.getItem(LS_INV));if(s&&s.tok)ii=Object.assign(ii,s);}catch(e){}
   applyInvest(ii);
-  ['r_principal','r_rate','r_years','ir_monthly','ir_rate','ir_years','ir_init','ir_exp','ir_tax'].forEach(id=>setRangeFill($(id)));
+  ['r_principal','r_rate','r_years','ir_rate','ir_years','ir_exp','ir_tax'].forEach(id=>setRangeFill($(id)));
   makeBadges('b_principal','n_principal','r_principal','v_principal',[3000,4000,5000,7000,10000],v=>v>=10000?(v/10000)+'億':v.toLocaleString()+'万',recalcLoan);
   makeBadges('b_rate','n_rate','r_rate','v_rate',[0.5,1.0,1.5,2.0,2.95],v=>(v+'').replace(/(\.\d*?)0+$/,'$1').replace(/\.$/,'')+'%',recalcLoan);
   makeBadges('b_years','n_years','r_years','v_years',[20,25,30,35,39],v=>v+'年',recalcLoan);
   makeBadges('b_irate','in_rate','ir_rate','iv_rate',[1,3,4,5,6,7],v=>v+'%',recalcInvest);
-  makeBadges('b_imonthly','in_monthly','ir_monthly','iv_monthly',[1,3,5,10,20,30],v=>v+'万',recalcInvest);
   makeBadges('b_iyears','in_years','ir_years','iv_years',[20,25,30,35,39],v=>v+'年',recalcInvest);
   syncPair('r_principal','n_principal','v_principal',v=>v.toLocaleString(),recalcLoan);
   syncPair('r_rate','n_rate','v_rate',v=>v,recalcLoan);
   syncPair('r_years','n_years','v_years',v=>v,recalcLoan);
   $('n_sy').addEventListener('input',recalcLoan); $('n_sm').addEventListener('input',recalcLoan);
-  // フラット35 ポイント制
   $('rd_on').addEventListener('change',recalcLoan);
   ['rd_iji','rd_area2','rd_area1','rd_iju','rd_chuko','rd_young'].forEach(id=>$(id).addEventListener('change',recalcLoan));
   $('rd_kids').addEventListener('input',recalcLoan);
   document.querySelectorAll('.s-ex').forEach(el=>el.addEventListener('change',()=>{ if(el.checked)document.querySelectorAll('.s-ex').forEach(o=>{if(o!==el)o.checked=false;}); recalcLoan(); }));
-  // 投資
-  syncPair('ir_monthly','in_monthly','iv_monthly',v=>v,recalcInvest);
   syncPair('ir_rate','in_rate','iv_rate',v=>(+v).toFixed(1),recalcInvest);
   syncPair('ir_years','in_years','iv_years',v=>v,recalcInvest);
-  syncPair('ir_init','in_init','iv_init',v=>v.toLocaleString(),recalcInvest);
   syncPair('ir_exp','in_exp','iv_exp',v=>(+v).toFixed(2),recalcInvest);
   syncPair('ir_tax','in_tax','iv_tax',v=>v,recalcInvest);
-  $('acc_seg').querySelectorAll('.seg-btn').forEach(b=>b.addEventListener('click',()=>{ invAccount=b.dataset.acc;
-    $('acc_seg').querySelectorAll('.seg-btn').forEach(o=>o.classList.toggle('active',o===b)); recalcInvest(); }));
+  ['im_tok','ii_tok','im_nisa','ii_nisa','im_ideco','ii_ideco'].forEach(id=>$(id).addEventListener('input',recalcInvest));
   renderPP(); renderPlans(); recalcLoan();
 }
 init();
