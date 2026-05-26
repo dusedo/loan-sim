@@ -146,11 +146,11 @@
           <div class="numrow"><input type="number" id="n_principal" min="100" max="20000" step="50" value="7000"><span>万円</span></div>
         </div>
         <div class="field">
-          <label>金利（年率・固定） <span class="val"><span id="v_rate">2.95</span><small>%</small></span></label>
+          <label>金利（年率・固定） <span class="val"><span id="v_rate">2.96</span><small>%</small></span></label>
           <div class="badges" id="b_rate"></div>
-          <input type="range" id="r_rate" min="0" max="5" step="0.01" value="2.95">
+          <input type="range" id="r_rate" min="0" max="5" step="0.01" value="2.96">
           <div class="ticks"><span>0%</span><span>5%</span></div>
-          <div class="numrow"><input type="number" id="n_rate" min="0" max="10" step="0.01" value="2.95"><span>%</span></div>
+          <div class="numrow"><input type="number" id="n_rate" min="0" max="10" step="0.01" value="2.96"><span>%</span></div>
         </div>
         <div class="field">
           <label>返済期間 <span class="val"><span id="v_years">39</span><small>年</small></span></label>
@@ -505,7 +505,7 @@ function syncPair(rangeId,numId,labelId,fmt,onChange){ const r=$(rangeId),nu=$(n
   r.addEventListener('input',()=>upd('r')); nu.addEventListener('input',()=>upd('n')); }
 
 /* ===================== ローンタブ ===================== */
-const LS_INPUT='loansim_input_v3', LS_PLANS='loansim_plans_v3', LS_INV='loansim_invest_v4';
+const LS_INPUT='loansim_input_v4', LS_PLANS='loansim_plans_v3', LS_INV='loansim_invest_v4';
 let prepayments=[], lastResult=null, lastAgg=null;
 const balChart=new Chart($('c_balance'),$('tip_balance'),'line');
 const brkChart=new Chart($('c_break'),$('tip_break'),'bar');
@@ -720,7 +720,7 @@ function activateTab(name){ curTab=name;
   if(name==='loan')recalcLoan(); else recalcInvest(); }
 
 function init(){ const now=new Date(); $('today').textContent=`${now.getFullYear()}年${now.getMonth()+1}月`;
-  let li={principalMan:7000,ratePct:2.95,years:39,sy:now.getFullYear(),sm:now.getMonth()+1,
+  let li={principalMan:7000,ratePct:2.96,years:39,sy:now.getFullYear(),sm:now.getMonth()+1,
     red:{on:false,zeh:false,a:false,b:false,iji:false,area2:false,area1:false,iju:false,chuko:false,kids:0,young:false},prepayments:[]};
   try{const s=JSON.parse(localStorage.getItem(LS_INPUT));if(s&&s.principalMan){li=s; if(!li.red)li.red={on:false};}}catch(e){}
   applyLoan(li);
@@ -729,7 +729,7 @@ function init(){ const now=new Date(); $('today').textContent=`${now.getFullYear
   applyInvest(ii);
   ['r_principal','r_rate','r_years','ir_rate','ir_years','ir_exp','ir_tax'].forEach(id=>setRangeFill($(id)));
   makeBadges('b_principal','n_principal','r_principal','v_principal',[3000,4000,5000,7000,10000],v=>v>=10000?(v/10000)+'億':v.toLocaleString()+'万',recalcLoan);
-  makeBadges('b_rate','n_rate','r_rate','v_rate',[0.5,1.0,1.5,2.0,2.95],v=>(v+'').replace(/(\.\d*?)0+$/,'$1').replace(/\.$/,'')+'%',recalcLoan);
+  makeBadges('b_rate','n_rate','r_rate','v_rate',[0.5,1.0,1.5,2.0,2.96],v=>(v+'').replace(/(\.\d*?)0+$/,'$1').replace(/\.$/,'')+'%',recalcLoan);
   makeBadges('b_years','n_years','r_years','v_years',[20,25,30,35,39],v=>v+'年',recalcLoan);
   makeBadges('b_irate','in_rate','ir_rate','iv_rate',[1,3,4,5,6,7],v=>v+'%',recalcInvest);
   makeBadges('b_iyears','in_years','ir_years','iv_years',[20,25,30,35,39],v=>v+'年',recalcInvest);
