@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ローン返済＆資産運用シミュレーター</title>
+<style>
+  :root{
+    --blue:#3460FB; --blue-200:#C5D7FB; --blue-50:#E8F1FE;
+    --orange:#FB5B01; --cyan:#00A3BF; --green:#259D63; --green-50:#E8F6EF; --red:#FE3939;
+    --ink:#1A1A2E; --sub:#5B6472; --line:#E5E7EB; --bg:#F5F7FB; --card:#fff;
+    --shadow:0 1px 3px rgba(20,30,60,.08),0 1px 2px rgba(20,30,60,.04);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,"Segoe UI","Hiragino Kaku Gothic ProN","Yu Gothic UI",Meiryo,sans-serif;
+    line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding:18px 16px 60px}
+  header.app{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+  header.app h1{font-size:20px;margin:0;letter-spacing:.02em}
+  header.app .meta{font-size:12px;color:var(--sub)}
+
+  .tabs{display:flex;gap:6px;margin-bottom:18px;background:#eceff5;padding:5px;border-radius:13px;width:fit-content;max-width:100%;flex-wrap:wrap}
+  .tab-btn{border:none;background:transparent;color:var(--sub);font-family:inherit;font-size:14px;font-weight:700;padding:9px 20px;border-radius:9px;cursor:pointer;transition:.15s}
+  .tab-btn.active{background:#fff;color:var(--ink);box-shadow:var(--shadow)}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:var(--shadow);margin-bottom:18px}
+  .card h2{font-size:15px;margin:0 0 14px;display:flex;align-items:center;gap:8px}
+  .card h2 .dot{width:8px;height:8px;border-radius:50%;background:var(--blue)}
+  .card.inv h2 .dot{background:var(--green)}
+
+  .inputs{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px 26px}
+  .field label{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--sub);margin-bottom:4px}
+  .field .val{font-size:15px;font-weight:700;color:var(--ink)}
+  .field .val small{font-weight:500;color:var(--sub);font-size:12px;margin-left:2px}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:6px;background:linear-gradient(var(--blue),var(--blue)) no-repeat,var(--line);background-size:0% 100%;outline:none;cursor:pointer;margin:8px 0 2px}
+  .inv input[type=range]{background:linear-gradient(var(--green),var(--green)) no-repeat,var(--line);background-size:0% 100%}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#fff;border:3px solid var(--blue);box-shadow:0 1px 4px rgba(20,30,60,.25);cursor:grab;transition:transform .08s}
+  .inv input[type=range]::-webkit-slider-thumb{border-color:var(--green)}
+  input[type=range]:active::-webkit-slider-thumb{cursor:grabbing;transform:scale(1.18)}
+  input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid var(--blue);cursor:grab}
+  .numrow{display:flex;align-items:center;gap:6px;margin-top:2px}
+  .numrow input[type=number]{width:100%;font-size:14px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;font-family:inherit}
+  .numrow span{font-size:12px;color:var(--sub);white-space:nowrap}
+  .ticks{display:flex;justify-content:space-between;font-size:10px;color:#9aa3b2;margin-top:2px}
+  .badges{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 2px}
+  .badge{border:1px solid var(--line);background:#fff;color:var(--sub);border-radius:20px;padding:3px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:.12s}
+  .badge:hover{border-color:var(--blue);color:var(--blue)}
+  .inv .badge:hover{border-color:var(--green);color:var(--green)}
+  .badge.on{background:var(--blue);border-color:var(--blue);color:#fff}
+  .inv .badge.on{background:var(--green);border-color:var(--green)}
+
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px}
+  .kpi{border-radius:12px;padding:15px 16px;background:var(--blue-50);border:1px solid var(--blue-200)}
+  .kpi.sub{background:#fff;border:1px solid var(--line)}
+  .kpi.g{background:var(--green-50);border-color:#BFE6D2}
+  .kpi .k{font-size:12px;color:var(--sub);margin-bottom:4px}
+  .kpi .v{font-size:24px;font-weight:800;color:var(--blue)}
+  .kpi.g .v{color:var(--green)}
+  .kpi.sub .v{font-size:21px;color:var(--ink)}
+  .kpi .u{font-size:12px;font-weight:600;color:var(--sub);margin-left:3px}
+
+  .charts{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:880px){.charts{grid-template-columns:1fr}}
+  .chartbox{position:relative}
+  .chart-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+  .chart-head .t{font-size:14px;font-weight:700}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--sub)}
+  .legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+  canvas{width:100%;height:260px;display:block;touch-action:none}
+  .chart-tip{position:absolute;pointer-events:none;background:rgba(26,26,46,.94);color:#fff;font-size:12px;padding:7px 10px;border-radius:8px;white-space:nowrap;opacity:0;transition:opacity .1s;z-index:5;transform:translate(-50%,-115%)}
+  .chart-tip b{font-weight:700}
+  .chart-tip .row{display:flex;align-items:center;gap:6px;margin-top:2px}
+  .chart-tip .row i{width:9px;height:9px;border-radius:2px;display:inline-block}
+
+  .pp-row{display:grid;grid-template-columns:auto auto 1fr auto auto;gap:8px;align-items:center;margin-bottom:8px;font-size:13px}
+  .pp-row input,.pp-row select{padding:6px 8px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:13px}
+  .pp-row .x{cursor:pointer;color:var(--red);border:none;background:none;font-size:18px;line-height:1;padding:0 4px}
+  .btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--blue);color:var(--blue);background:#fff;border-radius:9px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+  .btn:hover{background:var(--blue-50)}
+  .btn.solid{background:var(--blue);color:#fff}
+  .btn.ghost{border-color:var(--line);color:var(--sub);cursor:default}
+  .pp-effect{margin-top:12px;font-size:13px;color:var(--sub);display:none}
+  .pp-effect.on{display:block}
+  .pp-effect b{color:var(--green);font-size:15px}
+
+  .plan-list{display:flex;flex-direction:column;gap:6px;margin:12px 0}
+  .plan-item{display:flex;align-items:center;gap:10px;font-size:13px;padding:7px 10px;border:1px solid var(--line);border-radius:9px}
+  .plan-item .nm{flex:1;font-weight:600}
+  .plan-item .sm{color:var(--sub);font-size:12px}
+  .plan-item .del{cursor:pointer;color:var(--sub);border:none;background:none;font-size:16px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--line)}
+  th:first-child,td:first-child{text-align:left}
+  thead th{color:var(--sub);font-weight:600;font-size:12px;background:#fafbfd;position:sticky;top:0}
+  .cmp td.me{color:var(--blue);font-weight:700}
+
+  .tbl-wrap{max-height:460px;overflow:auto;border:1px solid var(--line);border-radius:10px}
+  .yr-row{cursor:pointer;font-weight:600}
+  .yr-row:hover{background:var(--blue-50)}
+  .yr-row td:first-child::before{content:"▸";display:inline-block;margin-right:7px;transition:transform .15s;color:var(--blue)}
+  .yr-row.open td:first-child::before{transform:rotate(90deg)}
+  .mo-row{background:#fafbfd;font-size:12px;color:var(--sub)}
+  .mo-row td:first-child{padding-left:28px}
+  .note{font-size:11.5px;color:#9aa3b2;margin-top:10px;line-height:1.5}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+  .verdict{margin-top:14px;padding:12px 14px;border-radius:10px;background:#fafbfd;border:1px solid var(--line);font-size:13.5px}
+  .verdict b{font-weight:800}
+
+  .masterchk{display:flex;gap:8px;align-items:center;font-weight:700;cursor:pointer;font-size:14px}
+  .rd-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px;margin:14px 0}
+  .rd-group .rd-title{font-size:12px;color:var(--sub);font-weight:700;margin-bottom:9px;border-bottom:1px solid var(--line);padding-bottom:5px}
+  .rd-group label{display:flex;align-items:center;gap:7px;font-size:13px;margin-bottom:8px;cursor:pointer}
+  .rd-group .pt{margin-left:auto;font-size:11px;font-weight:700;color:var(--blue);background:var(--blue-50);padding:1px 8px;border-radius:10px;white-space:nowrap}
+  .rd-summary{background:var(--blue-50);border:1px solid var(--blue-200);border-radius:10px;padding:12px 14px;font-size:13.5px;font-weight:700;line-height:1.7}
+  .rd-summary span{color:var(--blue);font-size:15px}
+
+  .seg{display:inline-flex;gap:4px;background:#eef1f6;padding:4px;border-radius:11px;margin-bottom:16px;flex-wrap:wrap}
+  .seg-btn{border:none;background:transparent;color:var(--sub);font-family:inherit;font-size:13px;font-weight:700;padding:8px 18px;border-radius:8px;cursor:pointer}
+  .seg-btn.active{background:#fff;color:var(--green);box-shadow:var(--shadow)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="app">
+    <h1>🏠 ローン返済 ＆ 📈 資産運用 シミュレーター</h1>
+    <div class="meta"><span id="today"></span> 試算</div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn active" id="tab-loan" onclick="activateTab('loan')">🏠 ローン返済</button>
+    <button class="tab-btn" id="tab-invest" onclick="activateTab('invest')">📈 資産運用</button>
+  </nav>
+
+  <!-- ============ ローン返済タブ ============ -->
+  <div class="tab-panel" id="panel-loan">
+    <section class="card">
+      <h2><span class="dot"></span>借入条件</h2>
+      <div class="inputs">
+        <div class="field">
+          <label>借入額 <span class="val"><span id="v_principal">7,000</span><small>万円</small></span></label>
+          <div class="badges" id="b_principal"></div>
+          <input type="range" id="r_principal" min="100" max="20000" step="50" value="7000">
+          <div class="ticks"><span>100万</span><span>2億</span></div>
+          <div class="numrow"><input type="number" id="n_principal" min="100" max="20000" step="50" value="7000"><span>万円</span></div>
+        </div>
+        <div class="field">
+          <label>金利（年率・固定） <span class="val"><span id="v_rate">2.95</span><small>%</small></span></label>
+          <div class="badges" id="b_rate"></div>
+          <input type="range" id="r_rate" min="0" max="5" step="0.01" value="2.95">
+          <div class="ticks"><span>0%</span><span>5%</span></div>
+          <div class="numrow"><input type="number" id="n_rate" min="0" max="10" step="0.01" value="2.95"><span>%</span></div>
+        </div>
+        <div class="field">
+          <label>返済期間 <span class="val"><span id="v_years">39</span><small>年</small></span></label>
+          <div class="badges" id="b_years"></div>
+          <input type="range" id="r_years" min="1" max="50" step="1" value="39">
+          <div class="ticks"><span>1年</span><span>50年</span></div>
+          <div class="numrow"><input type="number" id="n_years" min="1" max="50" step="1" value="39"><span>年</span></div>
+        </div>
+        <div class="field">
+          <label>返済開始 <span class="val" id="v_start">2026年5月</span></label>
+          <div class="numrow" style="margin-top:8px">
+            <input type="number" id="n_sy" min="1990" max="2100" step="1"><span>年</span>
+            <input type="number" id="n_sm" min="1" max="12" step="1"><span>月</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2><span class="dot"></span>金利引き下げ（フラット35S・子育てプラス等／ポイント制度）</h2>
+      <label class="masterchk"><input type="checkbox" id="rd_on"> 適用する（該当する項目にチェック・複数可）</label>
+      <div id="rd_body" style="display:none">
+        <div class="rd-grid">
+          <div class="rd-group">
+            <div class="rd-title">住宅性能（フラット35S／いずれか1つ）</div>
+            <label><input type="checkbox" class="s-ex" id="rd_zeh"> ZEH<span class="pt">+3pt</span></label>
+            <label><input type="checkbox" class="s-ex" id="rd_a"> 金利Aプラン<span class="pt">+2pt</span></label>
+            <label><input type="checkbox" class="s-ex" id="rd_b"> 金利Bプラン<span class="pt">+1pt</span></label>
+          </div>
+          <div class="rd-group">
+            <div class="rd-title">管理・修繕／エリア／中古</div>
+            <label><input type="checkbox" id="rd_iji"> 維持保全型（長期優良住宅等）<span class="pt">+1pt</span></label>
+            <label><input type="checkbox" id="rd_area2"> 地域連携型（子育て支援・空き家）<span class="pt">+2pt</span></label>
+            <label><input type="checkbox" id="rd_area1"> 地域連携型（地域活性化）<span class="pt">+1pt</span></label>
+            <label><input type="checkbox" id="rd_iju"> 地方移住支援型<span class="pt">+2pt</span></label>
+            <label><input type="checkbox" id="rd_chuko"> 中古プラス<span class="pt">+1pt</span></label>
+          </div>
+          <div class="rd-group">
+            <div class="rd-title">子育てプラス</div>
+            <label>子どもの人数 <input type="number" id="rd_kids" min="0" max="10" value="0" style="width:60px;padding:6px 8px;border:1px solid var(--line);border-radius:8px"> 人<span class="pt" id="rd_kids_pt">+0pt</span></label>
+            <label><input type="checkbox" id="rd_young"> 若年夫婦世帯（いずれか40歳未満）</label>
+            <div class="ticks" style="color:var(--sub)">若年夫婦 または 子1人＝1pt、子2人＝2pt…（人数分）</div>
+          </div>
+        </div>
+        <div class="rd-summary" id="rd_summary"></div>
+        <div class="note">地域連携型・地方移住支援型は地方公共団体の支援が条件で相互に併用不可の場合あり。子育てプラス未利用時は合計4ポイント（当初5年▲1.0%）が上限。1pt＝当初5年間▲0.25%、5pt超で6〜10年目、9pt超で11〜15年目も引き下げ。引き下げ期間終了後は本来金利に戻り返済額が増えます。最新条件は公式サイト等でご確認ください。</div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2><span class="dot"></span>試算結果サマリー</h2>
+      <div class="kpis">
+        <div class="kpi"><div class="k">毎月の返済額</div><div class="v"><span id="k_monthly">–</span><span class="u">円</span></div><div class="k" id="k_monthly2" style="margin-top:3px;color:var(--blue)"></div></div>
+        <div class="kpi sub"><div class="k">総支払額（元金＋利息）</div><div class="v"><span id="k_total">–</span><span class="u">円</span></div></div>
+        <div class="kpi sub"><div class="k">うち利息総額</div><div class="v"><span id="k_interest">–</span><span class="u">円</span></div></div>
+        <div class="kpi sub"><div class="k">完済まで</div><div class="v"><span id="k_term">–</span></div><div class="k" id="k_term2" style="margin-top:3px;color:var(--ink)"></div></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2><span class="dot"></span>返済の推移</h2>
+      <div class="charts">
+        <div class="chartbox">
+          <div class="chart-head"><span class="t">ローン残高の推移（万円）</span><div class="legend" id="lg_balance"></div></div>
+          <canvas id="c_balance"></canvas><div class="chart-tip" id="tip_balance"></div>
+        </div>
+        <div class="chartbox">
+          <div class="chart-head"><span class="t">年間の元金／利息（万円）</span>
+            <div class="legend"><span><i style="background:var(--blue)"></i>元金</span><span><i style="background:var(--orange)"></i>利息</span></div></div>
+          <canvas id="c_break"></canvas><div class="chart-tip" id="tip_break"></div>
+        </div>
+      </div>
+      <div class="note">※ スライダーをドラッグするとグラフがリアルタイムに動きます。グラフにマウスを乗せると数値を表示します。</div>
+    </section>
+
+    <section class="card">
+      <h2><span class="dot"></span>繰上返済シミュレーション</h2>
+      <div id="pp_rows"></div>
+      <button class="btn" id="pp_add">＋ 繰上返済を追加</button>
+      <div class="pp-effect" id="pp_effect"></div>
+    </section>
+
+    <section class="card">
+      <h2><span class="dot"></span>複数プラン比較</h2>
+      <div class="toolbar">
+        <button class="btn solid" id="plan_save">＋ 現在の条件をプランとして保存</button>
+        <button class="btn ghost" disabled>下のチェックでグラフに重ねて比較</button>
+      </div>
+      <div class="plan-list" id="plan_list"></div>
+      <div id="cmp_wrap" style="overflow:auto;display:none">
+        <table class="cmp"><thead><tr id="cmp_head"></tr></thead><tbody id="cmp_body"></tbody></table>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2><span class="dot"></span>返済予定表（償却表）</h2>
+      <div class="tbl-wrap">
+        <table><thead><tr><th>時期</th><th>年間返済額</th><th>元金</th><th>利息</th><th>繰上返済</th><th>年末残高</th></tr></thead><tbody id="amort_body"></tbody></table>
+      </div>
+      <div class="note" id="amort_note"></div>
+    </section>
+  </div>
+
+  <!-- ============ 資産運用タブ ============ -->
+  <div class="tab-panel inv" id="panel-invest" style="display:none">
+    <section class="card inv">
+      <h2><span class="dot"></span>積立条件（オルカン等のインデックス投資イメージ）</h2>
+      <div class="seg" id="acc_seg">
+        <button class="seg-btn active" data-acc="nisa">NISA（非課税）</button>
+        <button class="seg-btn" data-acc="tokutei">特定口座（課税）</button>
+        <button class="seg-btn" data-acc="ideco">iDeCo</button>
+      </div>
+      <div class="inputs">
+        <div class="field">
+          <label>毎月の積立額 <span class="val"><span id="iv_monthly">10</span><small>万円</small></span></label>
+          <div class="badges" id="b_imonthly"></div>
+          <input type="range" id="ir_monthly" min="0" max="50" step="1" value="10">
+          <div class="ticks"><span>0</span><span>50万</span></div>
+          <div class="numrow"><input type="number" id="in_monthly" min="0" max="300" step="1" value="10"><span>万円/月</span></div>
+        </div>
+        <div class="field">
+          <label>想定年利（リターン・税引前） <span class="val"><span id="iv_rate">5.0</span><small>%</small></span></label>
+          <div class="badges" id="b_irate"></div>
+          <input type="range" id="ir_rate" min="0" max="10" step="0.1" value="5">
+          <div class="ticks"><span>0%</span><span>10%</span></div>
+          <div class="numrow"><input type="number" id="in_rate" min="0" max="15" step="0.1" value="5"><span>%</span></div>
+        </div>
+        <div class="field">
+          <label>積立期間 <span class="val"><span id="iv_years">39</span><small>年</small></span></label>
+          <div class="badges" id="b_iyears"></div>
+          <input type="range" id="ir_years" min="1" max="50" step="1" value="39">
+          <div class="ticks"><span>1年</span><span>50年</span></div>
+          <div class="numrow"><input type="number" id="in_years" min="1" max="50" step="1" value="39"><span>年</span></div>
+        </div>
+        <div class="field">
+          <label>初期投資額（一時金） <span class="val"><span id="iv_init">0</span><small>万円</small></span></label>
+          <input type="range" id="ir_init" min="0" max="5000" step="50" value="0">
+          <div class="ticks"><span>0</span><span>5000万</span></div>
+          <div class="numrow"><input type="number" id="in_init" min="0" max="50000" step="50" value="0"><span>万円</span></div>
+        </div>
+        <div class="field">
+          <label>信託報酬（年率・手数料） <span class="val"><span id="iv_exp">0.10</span><small>%</small></span></label>
+          <input type="range" id="ir_exp" min="0" max="2" step="0.01" value="0.1">
+          <div class="ticks"><span>0%</span><span>2%</span></div>
+          <div class="numrow"><input type="number" id="in_exp" min="0" max="3" step="0.01" value="0.1"><span>%/年</span></div>
+        </div>
+        <div class="field">
+          <label>所得税＋住民税率（iDeCo節税用） <span class="val"><span id="iv_tax">20</span><small>%</small></span></label>
+          <input type="range" id="ir_tax" min="5" max="55" step="1" value="20">
+          <div class="ticks"><span>5%</span><span>55%</span></div>
+          <div class="numrow"><input type="number" id="in_tax" min="0" max="55" step="1" value="20"><span>%</span></div>
+        </div>
+      </div>
+      <div class="note">信託報酬は評価額に対し毎年かかる運用コスト（オルカンは約0.05775%）。特定口座は売却益に20.315%課税。iDeCoは口座管理手数料171円/月＋掛金が全額所得控除（節税）。受取時は退職所得控除等の範囲内で非課税と仮定。</div>
+    </section>
+
+    <section class="card inv">
+      <h2><span class="dot"></span>運用結果サマリー（<span id="iv_yr2">39</span>年後の受取額）</h2>
+      <div class="kpis">
+        <div class="kpi g"><div class="k">受取額（税・手数料考慮）</div><div class="v"><span id="ik_final">–</span><span class="u">円</span></div><div class="k" id="ik_finalsub" style="margin-top:3px"></div></div>
+        <div class="kpi sub"><div class="k">元本（拠出総額）</div><div class="v"><span id="ik_principal">–</span><span class="u">円</span></div></div>
+        <div class="kpi sub"><div class="k">手取り運用益</div><div class="v"><span id="ik_gain">–</span><span class="u">円</span></div></div>
+        <div class="kpi sub"><div class="k">元本に対する倍率</div><div class="v"><span id="ik_mult">–</span><span class="u">倍</span></div></div>
+      </div>
+      <div style="overflow:auto;margin-top:16px">
+        <table><thead><tr><th>口座種別</th><th>受取額（手取り）</th><th>運用益（手取り）</th><th>備考</th></tr></thead><tbody id="acc_body"></tbody></table>
+      </div>
+    </section>
+
+    <section class="card inv">
+      <h2><span class="dot"></span>資産の推移（何年後にいくら）</h2>
+      <div class="charts">
+        <div class="chartbox">
+          <div class="chart-head"><span class="t">評価額の推移（万円）</span>
+            <div class="legend"><span><i style="background:var(--green)"></i>評価額</span><span><i style="background:#B7C0CF"></i>元本</span></div></div>
+          <canvas id="c_invest"></canvas><div class="chart-tip" id="tip_invest"></div>
+        </div>
+        <div class="chartbox">
+          <div class="chart-head"><span class="t">繰上返済 vs 投資（累計メリット・万円）</span>
+            <div class="legend"><span><i style="background:var(--green)"></i>投資の手取り運用益</span><span><i style="background:var(--blue)"></i>繰上返済の利息軽減</span></div></div>
+          <canvas id="c_cmp"></canvas><div class="chart-tip" id="tip_cmp"></div>
+        </div>
+      </div>
+      <div class="verdict" id="verdict"></div>
+      <div class="note">比較は「ローン返済タブの借入条件」に対し、毎月の積立額と同額を<b>繰上返済（期間短縮型）に回した場合の利息軽減額（累計）</b>と、<b>同額を投資した場合の手取り運用益</b>を並べています。投資は想定利回りでの試算で<b>元本割れリスク</b>があり、繰上返済は確実な利息削減です。</div>
+    </section>
+
+    <section class="card inv">
+      <h2><span class="dot"></span>資産推移表</h2>
+      <div class="tbl-wrap">
+        <table><thead><tr><th>経過</th><th>年間積立</th><th>累計元本</th><th>含み益</th><th>評価額</th></tr></thead><tbody id="inv_body"></tbody></table>
+      </div>
+    </section>
+  </div>
+
+  <div class="note">
+    免責：本シミュレーションは概算です。ローン返済額・利息は金融機関の計算方法（端数処理等）により、投資の運用結果は市場により異なります。税・手数料の扱いは簡略化しています（iDeCo受取時課税は未考慮、各種控除・特別復興税等の細目は概算）。実際の数値は金融機関・公式サイトでご確認ください。
+  </div>
+</div>
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const yen = n => Math.round(n).toLocaleString('ja-JP');
+const man = n => Math.round(n/10000).toLocaleString('ja-JP');
+const COL = {blue:'#3460FB',orange:'#FB5B01',cyan:'#00A3BF',green:'#259D63',red:'#FE3939',purple:'#7B61FF',gray:'#B7C0CF'};
+const PLAN_COLORS = [COL.cyan,COL.purple,COL.red,COL.orange,COL.green];
+const TAXRATE = 0.20315; // 譲渡益課税(所得税15%+住民税5%+復興税)
+
+function termStr(months){ if(months<=0)return '–'; const y=Math.floor(months/12),m=months%12; return (y?y+'年':'')+(m?m+'ヶ月':(y?'':'0ヶ月')); }
+function payoffDate(sy,sm,months){ const idx=(sm-1)+(months-1); return {y:sy+Math.floor(idx/12), m:idx%12+1}; }
+function niceMax(v){ if(v<=0)return 1; const e=Math.pow(10,Math.floor(Math.log10(v))),f=v/e; let nf; if(f<=1)nf=1;else if(f<=2)nf=2;else if(f<=2.5)nf=2.5;else if(f<=5)nf=5;else nf=10; return nf*e; }
+function escapeHtml(s){return String(s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
+
+/* ===== ローン計算（元利均等・多段ステップ金利対応） ===== */
+function simulate(P, annualPct, years, prepayments, opt){
+  opt=opt||{}; const bands=opt.bands||null; const totalMonths=years*12;
+  const redAt=m=>{ if(!bands)return 0; for(const bd of bands){ if(m<=bd.end) return bd.pct||0; } return 0; };
+  const rateAt=m=>(Math.max(0,annualPct-redAt(m))/100/12);
+  const pay=(bal,mr,rem)=>rem<=0?bal:(mr===0?bal/rem:bal*mr*Math.pow(1+mr,rem)/(Math.pow(1+mr,rem)-1));
+  const ppM={}; (prepayments||[]).forEach(p=>{ if(p.amountYen>0&&p.month>=1)(ppM[p.month]=ppM[p.month]||[]).push(p); });
+  let balance=P, curRate=rateAt(1), curM=Math.round(pay(balance,curRate,totalMonths));
+  const paymentSteps=[{from:1,monthly:curM}];
+  let tI=0,tP=0,tE=0; const rows=[]; let i=0; const cap=totalMonths+2400;
+  while(balance>0.5&&i<cap){ i++;
+    const rate=rateAt(i);
+    if(rate!==curRate){ curRate=rate; const rem=totalMonths-(i-1); curM=Math.round(pay(balance,curRate,rem)); paymentSteps.push({from:i,monthly:curM}); }
+    const interest=balance*curRate; let pp=curM-interest,payAmt=curM;
+    if(pp>=balance){pp=balance;payAmt=balance+interest;} balance-=pp;
+    let extra=0; const ps=ppM[i];
+    if(ps)ps.forEach(p=>{ const amt=Math.min(p.amountYen,balance); balance-=amt; extra+=amt;
+      if(p.type==='reduce'){ const rem=totalMonths-i; if(rem>0&&balance>0)curM=Math.round(pay(balance,curRate,rem)); } });
+    tI+=interest;tP+=pp;tE+=extra; rows.push({m:i,payment:payAmt,interest,principal:pp,extra,balance:Math.max(0,balance)});
+    if(balance<=0.5)break;
+  }
+  return {rows,baseMonthly:paymentSteps[0].monthly,initMonthly:paymentSteps[0].monthly,paymentSteps,
+    months:rows.length,totalInterest:Math.round(tI),totalPayment:Math.round(tI+tP+tE),
+    hasPrepay:(prepayments||[]).some(p=>p.amountYen>0),hasReduction:!!bands};
+}
+/* ポイント→引き下げバンド */
+function loanBands(red){
+  if(!red||!red.on) return {points:0,bands:null};
+  const sp = red.zeh?3:red.a?2:red.b?1:0;
+  let pts = sp + (red.iji?1:0)+(red.area2?2:0)+(red.area1?1:0)+(red.iju?2:0)+(red.chuko?1:0);
+  const kids=+red.kids||0; const usingKosodate = kids>0||red.young;
+  pts += Math.max(kids, red.young?1:0);
+  const cap = usingKosodate?12:4;
+  const cp = Math.min(pts,cap);
+  if(cp<=0) return {points:0,bands:null};
+  const q=v=>Math.max(0,Math.min(4,v))*0.25;
+  const p1=q(cp), p2=q(cp-4), p3=q(cp-8);
+  return {points:cp, rawPoints:pts, capped:pts>cp, p1,p2,p3,
+    bands:[{end:60,pct:p1},{end:120,pct:p2},{end:180,pct:p3}]};
+}
+function aggregate(res,sy,sm){
+  const rows=res.rows, elapsed=Math.ceil(rows.length/12); let p0=0;
+  if(rows.length)p0=rows[0].balance+rows[0].principal+rows[0].extra;
+  const yearly=[],balLine=[p0];
+  for(let e=1;e<=elapsed;e++){ const s=(e-1)*12,t=Math.min(e*12,rows.length); let pr=0,it=0,ex=0;
+    for(let k=s;k<t;k++){pr+=rows[k].principal;it+=rows[k].interest;ex+=rows[k].extra;}
+    yearly.push({e,calYear:sy+Math.floor((sm-1+(e*12-1))/12),principal:pr,interest:it,extra:ex,endBal:rows[t-1].balance}); balLine.push(rows[t-1].balance);
+  }
+  return {principal0:p0,yearly,balLine,elapsed};
+}
+
+/* ===== 投資計算（毎月末積立・月複利・手数料控除） ===== */
+function investSim(monthlyYen, grossPct, years, initYen, opt){
+  opt=opt||{}; const expense=+opt.expensePct||0, fee=+opt.monthlyFee||0;
+  const rm=Math.max(0,grossPct-expense)/100/12, months=years*12;
+  let bal=initYen||0, contribCum=initYen||0; const rows=[];
+  for(let i=1;i<=months;i++){ const invest=Math.max(0,monthlyYen-fee); bal=bal*(1+rm)+invest; contribCum+=monthlyYen; rows.push({m:i,balance:bal,contrib:contribCum}); }
+  const yearly=[],valLine=[initYen||0],conLine=[initYen||0];
+  for(let e=1;e<=years;e++){ const row=rows[Math.min(e*12,rows.length)-1], prev=(e-1)*12>0?rows[(e-1)*12-1]:{contrib:initYen||0};
+    yearly.push({e,val:row.balance,contrib:row.contrib,gain:row.balance-row.contrib,yearContrib:row.contrib-prev.contrib}); valLine.push(row.balance); conLine.push(row.contrib); }
+  const last=rows.length?rows[rows.length-1]:{balance:initYen||0,contrib:initYen||0};
+  return {rows,yearly,valLine,conLine,final:last.balance,contrib:last.contrib,gain:last.balance-last.contrib};
+}
+
+/* ===== アニメ付き Canvas チャート ===== */
+class Chart{
+  constructor(canvas,tip,type){ this.cv=canvas;this.ctx=canvas.getContext('2d');this.tip=tip;this.type=type;
+    this.disp=null;this.target=null;this.cfg=null;this.raf=null;this.hover=-1;
+    canvas.addEventListener('mousemove',e=>this.onMove(e));
+    canvas.addEventListener('mouseleave',()=>{this.hover=-1;this.tip.style.opacity=0;this.render();});
+    window.addEventListener('resize',()=>this.render()); }
+  set(cfg){ this.cfg=cfg;
+    const arrs=(this.type==='line'?cfg.series:cfg.segments).map(s=>s.data.slice());
+    const yMax=niceMax(this._rawMax(cfg));
+    if(!this.disp||!this._sameShape(this.disp.arrs,arrs)) this.disp={arrs:arrs.map(a=>a.slice()),yMax};
+    this.target={arrs,yMax}; this.startLoop(); }
+  _rawMax(cfg){ if(this.type==='line'){let mx=0;cfg.series.forEach(s=>s.data.forEach(v=>{if(v>mx)mx=v;}));return mx;}
+    let mx=0,n=cfg.labels.length; for(let i=0;i<n;i++){let s=0;cfg.segments.forEach(seg=>s+=seg.data[i]||0);if(s>mx)mx=s;} return mx; }
+  _sameShape(a,b){return a.length===b.length&&a.every((x,i)=>x.length===b[i].length);}
+  startLoop(){ if(this.raf)return; const step=()=>{this.raf=null;if(this.ease())this.startLoop();this.render();}; this.raf=requestAnimationFrame(step); }
+  ease(){ let mv=false; const k=.28;
+    for(let s=0;s<this.disp.arrs.length;s++){ const d=this.disp.arrs[s],t=this.target.arrs[s];
+      for(let i=0;i<d.length;i++){const df=t[i]-d[i]; if(Math.abs(df)>Math.max(1,Math.abs(t[i])*.001)){d[i]+=df*k;mv=true;}else d[i]=t[i];} }
+    const yd=this.target.yMax-this.disp.yMax; if(Math.abs(yd)>this.target.yMax*.002){this.disp.yMax+=yd*k;mv=true;}else this.disp.yMax=this.target.yMax; return mv; }
+  _geom(){ const dpr=window.devicePixelRatio||1,rect=this.cv.getBoundingClientRect(); const W=rect.width||600,H=rect.height||260;
+    if(this.cv.width!==Math.round(W*dpr)||this.cv.height!==Math.round(H*dpr)){this.cv.width=W*dpr;this.cv.height=H*dpr;}
+    const ctx=this.ctx;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H); return {W,H,pad:{l:54,r:14,t:12,b:30}}; }
+  render(){ if(!this.disp||!this.cfg)return; const {W,H,pad}=this._geom(),ctx=this.ctx;
+    const plotW=W-pad.l-pad.r,plotH=H-pad.t-pad.b,yMax=this.disp.yMax||1,labels=this.cfg.labels,n=labels.length;
+    const yFor=v=>pad.t+plotH*(1-v/yMax);
+    ctx.font='11px sans-serif';ctx.fillStyle='#8a93a3';ctx.strokeStyle='#EDF0F5';ctx.lineWidth=1;
+    for(let i=0;i<=4;i++){const v=yMax*i/4,y=yFor(v);ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+plotW,y);ctx.stroke();
+      ctx.textAlign='right';ctx.textBaseline='middle';ctx.fillText(man(v),pad.l-7,y);}
+    if(this.hover>=0){const hx=this.type==='line'?this._xL(this.hover,n,pad,plotW):this._xB(this.hover,n,pad,plotW);
+      ctx.strokeStyle='#C9D2E0';ctx.setLineDash([4,3]);ctx.beginPath();ctx.moveTo(hx,pad.t);ctx.lineTo(hx,pad.t+plotH);ctx.stroke();ctx.setLineDash([]);}
+    ctx.fillStyle='#8a93a3';ctx.textAlign='center';ctx.textBaseline='top';
+    const xs=Math.max(1,Math.ceil(n/8));
+    for(let i=0;i<n;i++){if(i%xs!==0&&i!==n-1)continue; const x=this.type==='line'?this._xL(i,n,pad,plotW):this._xB(i,n,pad,plotW); ctx.fillText(labels[i],x,pad.t+plotH+5);}
+    if(this.type==='line')this._lines(ctx,pad,plotW,plotH,yFor,n); else this._bars(ctx,pad,plotW,plotH,yMax,n);
+  }
+  _xL(i,n,pad,plotW){return pad.l+(n<=1?plotW/2:plotW*i/(n-1));}
+  _xB(i,n,pad,plotW){const bw=plotW/n;return pad.l+bw*i+bw/2;}
+  _lines(ctx,pad,plotW,plotH,yFor,n){ this.cfg.series.forEach((s,si)=>{ const data=this.disp.arrs[si];
+    ctx.strokeStyle=s.color;ctx.lineWidth=s.width||2.4;ctx.lineJoin='round';ctx.beginPath();
+    data.forEach((v,i)=>{const x=this._xL(i,n,pad,plotW),y=yFor(v);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.stroke();
+    if(s.fill){ctx.lineTo(this._xL(n-1,n,pad,plotW),pad.t+plotH);ctx.lineTo(pad.l,pad.t+plotH);ctx.closePath();ctx.fillStyle=s.fill;ctx.fill();}
+    const sp=n<=24; data.forEach((v,i)=>{if(!sp&&i%Math.ceil(n/12)!==0&&i!==n-1&&i!==this.hover)return; ctx.fillStyle=s.color;ctx.beginPath();ctx.arc(this._xL(i,n,pad,plotW),yFor(v),i===this.hover?4:2.3,0,7);ctx.fill();});
+  }); }
+  _bars(ctx,pad,plotW,plotH,yMax,n){ const bw=plotW/n,w=Math.max(2,bw*.62);
+    for(let i=0;i<n;i++){const cx=this._xB(i,n,pad,plotW);let base=pad.t+plotH;
+      this.cfg.segments.forEach((seg,si)=>{const v=this.disp.arrs[si][i]||0,h=plotH*(v/yMax);
+        ctx.fillStyle=seg.color;ctx.globalAlpha=(this.hover<0||this.hover===i)?1:.5;
+        ctx.beginPath();roundTop(ctx,cx-w/2,base-h,w,h,si===this.cfg.segments.length-1?Math.min(3,w/2):0);ctx.fill();base-=h;});
+      ctx.globalAlpha=1;}
+  }
+  onMove(e){ if(!this.cfg)return; const rect=this.cv.getBoundingClientRect(),pad={l:54,r:14,t:12,b:30};
+    const W=rect.width,H=rect.height,plotW=W-pad.l-pad.r,n=this.cfg.labels.length,mx=e.clientX-rect.left;
+    let idx=this.type==='line'?Math.round((mx-pad.l)/(plotW/(n-1||1))):Math.floor((mx-pad.l)/(plotW/n));
+    idx=Math.max(0,Math.min(n-1,idx)); this.hover=idx; this.render();
+    this.tip.innerHTML=this.cfg.tipFmt(idx); this.tip.style.opacity=1;
+    const x=this.type==='line'?this._xL(idx,n,pad,plotW):this._xB(idx,n,pad,plotW);
+    const yTop=this.type==='line'?(pad.t+(H-pad.t-pad.b)*(1-(this.disp.arrs[0][idx]||0)/(this.disp.yMax||1))):pad.t+10;
+    this.tip.style.left=x+'px'; this.tip.style.top=Math.max(8,yTop)+'px'; }
+}
+function roundTop(ctx,x,y,w,h,r){ if(h<=0){ctx.rect(x,y,w,.01);return;} r=Math.min(r,h);
+  ctx.moveTo(x,y+h);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h);ctx.closePath(); }
+
+/* ===== バッジ・スライダー共通 ===== */
+function makeBadges(boxId,numId,rangeId,labelId,values,fmt,onChange){
+  const box=$(boxId); box.innerHTML='';
+  values.forEach(val=>{ const b=document.createElement('button'); b.className='badge'; b.textContent=fmt?fmt(val):val; b.dataset.v=val;
+    b.addEventListener('click',()=>{ $(numId).value=val; $(rangeId).value=Math.min(+$(rangeId).max,Math.max(+$(rangeId).min,val));
+      if(labelId)$(labelId).textContent=val; setRangeFill($(rangeId)); onChange(); }); box.appendChild(b); });
+}
+function updateBadges(boxId,current){ $(boxId).querySelectorAll('.badge').forEach(b=>b.classList.toggle('on',Math.abs(+b.dataset.v-current)<1e-9)); }
+function setRangeFill(el){ const min=+el.min,max=+el.max,v=+el.value; el.style.backgroundSize=((v-min)/(max-min))*100+'% 100%'; }
+function syncPair(rangeId,numId,labelId,fmt,onChange){ const r=$(rangeId),nu=$(numId);
+  const upd=src=>{ if(src==='r')nu.value=r.value; else r.value=Math.min(+r.max,Math.max(+r.min,+nu.value||0));
+    if(labelId)$(labelId).textContent=fmt?fmt(+nu.value):(+nu.value).toLocaleString(); setRangeFill(r); onChange(); };
+  r.addEventListener('input',()=>upd('r')); nu.addEventListener('input',()=>upd('n')); }
+
+/* ===================== ローンタブ ===================== */
+const LS_INPUT='loansim_input_v3', LS_PLANS='loansim_plans_v3', LS_INV='loansim_invest_v2';
+let prepayments=[], lastResult=null, lastAgg=null;
+const balChart=new Chart($('c_balance'),$('tip_balance'),'line');
+const brkChart=new Chart($('c_break'),$('tip_break'),'bar');
+
+function readRed(){ return {on:$('rd_on').checked,zeh:$('rd_zeh').checked,a:$('rd_a').checked,b:$('rd_b').checked,
+  iji:$('rd_iji').checked,area2:$('rd_area2').checked,area1:$('rd_area1').checked,iju:$('rd_iju').checked,chuko:$('rd_chuko').checked,
+  kids:+$('rd_kids').value||0,young:$('rd_young').checked}; }
+function readLoan(){ return {principalMan:+$('n_principal').value||0,ratePct:+$('n_rate').value||0,years:+$('n_years').value||1,
+  sy:+$('n_sy').value||2026,sm:Math.min(12,Math.max(1,+$('n_sm').value||1)),red:readRed(),prepayments:prepayments.map(p=>({...p}))}; }
+function bandsOpt(red){ const b=loanBands(red); return b.points>0?{bands:b.bands}:{}; }
+
+function renderPP(){ const box=$('pp_rows');box.innerHTML='';
+  prepayments.forEach((p,i)=>{ const row=document.createElement('div');row.className='pp-row';
+    row.innerHTML=`<span>開始から</span><span><input type="number" data-f="years" min="0" max="60" value="${p.years}" style="width:54px"> 年 `+
+      `<input type="number" data-f="months" min="0" max="11" value="${p.months}" style="width:48px"> ヶ月後</span>`+
+      `<span><input type="number" data-f="amountMan" min="0" step="10" value="${p.amountMan}" style="width:84px"> 万円</span>`+
+      `<select data-f="type"><option value="shorten"${p.type==='shorten'?' selected':''}>期間短縮型</option><option value="reduce"${p.type==='reduce'?' selected':''}>返済額軽減型</option></select>`+
+      `<button class="x" title="削除">×</button>`;
+    row.querySelectorAll('input,select').forEach(el=>el.addEventListener('input',()=>{const f=el.dataset.f;p[f]=f==='type'?el.value:(+el.value||0);recalcLoan();}));
+    row.querySelector('.x').addEventListener('click',()=>{prepayments.splice(i,1);renderPP();recalcLoan();}); box.appendChild(row); });
+}
+$('pp_add').addEventListener('click',()=>{prepayments.push({years:5,months:0,amountMan:100,type:'shorten'});renderPP();recalcLoan();});
+
+function recalcLoan(){ const inp=readLoan(); $('v_start').textContent=`${inp.sy}年${inp.sm}月`;
+  updateBadges('b_principal',inp.principalMan); updateBadges('b_rate',inp.ratePct); updateBadges('b_years',inp.years);
+  $('rd_body').style.display=inp.red.on?'':'none'; $('rd_kids_pt').textContent='+'+(inp.red.kids||0)+'pt';
+  const b=loanBands(inp.red); const opt=b.points>0?{bands:b.bands}:{};
+  if(b.points>0){ const eff=p=>(inp.ratePct-p).toFixed(2); const parts=[`当初1〜5年 ▲${b.p1.toFixed(2)}%（${eff(b.p1)}%）`];
+    if(b.p2>0)parts.push(`6〜10年 ▲${b.p2.toFixed(2)}%（${eff(b.p2)}%）`); if(b.p3>0)parts.push(`11〜15年 ▲${b.p3.toFixed(2)}%（${eff(b.p3)}%）`);
+    $('rd_summary').innerHTML=`合計 <span>${b.points}ポイント</span>${b.capped?`（上限により${b.points}ptに制限）`:''} → `+parts.join(' ／ ');
+  } else $('rd_summary').textContent='適用なし（該当項目をチェックしてください）';
+  const P=Math.round(inp.principalMan*10000);
+  const pps=inp.prepayments.map(p=>({month:p.years*12+p.months,amountYen:Math.round(p.amountMan*10000),type:p.type}));
+  const res=simulate(P,inp.ratePct,inp.years,pps,opt); const agg=aggregate(res,inp.sy,inp.sm); lastResult=res;lastAgg=agg;
+  const steps=res.paymentSteps;
+  $('k_monthly').textContent=yen(steps[0].monthly);
+  $('k_monthly2').textContent= steps.length>1 ? steps.slice(1).map(s=>`${Math.floor((s.from-1)/12)+1}年目〜 ${yen(s.monthly)}円`).join(' ／ ') : '';
+  $('k_total').textContent=yen(res.totalPayment); $('k_interest').textContent=yen(res.totalInterest);
+  $('k_term').textContent=termStr(res.months);
+  const pd=payoffDate(inp.sy,inp.sm,res.months);
+  $('k_term2').innerHTML=`${pd.y}年${pd.m}月 完済`+(res.months<inp.years*12?` <span style="color:var(--green)">（短縮）</span>`:'');
+  if(res.hasPrepay){ const base=simulate(P,inp.ratePct,inp.years,[],opt);
+    $('pp_effect').className='pp-effect on';
+    $('pp_effect').innerHTML=`繰上返済の効果：返済期間を <b>${termStr(base.months-res.months)}</b> 短縮、利息を <b>${yen(base.totalInterest-res.totalInterest)}円</b> 軽減`;
+  } else $('pp_effect').className='pp-effect';
+  drawLoanCharts(inp); renderAmort(agg); renderCompare(); saveInputs(inp);
+}
+function drawLoanCharts(inp){ const agg=lastAgg, sel=getSelectedPlans();
+  const maxYears=Math.max(agg.elapsed,...sel.map(p=>p._agg.elapsed));
+  const labels=[]; for(let e=0;e<=maxYears;e++)labels.push(e===0?'開始':e+'年');
+  const series=[{name:'残高',color:COL.blue,width:2.8,fill:'rgba(52,96,251,0.10)',data:padLine(agg.balLine,maxYears).map(v=>v/10000)}];
+  sel.forEach((p,i)=>series.push({name:p.name,color:PLAN_COLORS[i%PLAN_COLORS.length],width:2,data:padLine(p._agg.balLine,maxYears).map(v=>v/10000)}));
+  $('lg_balance').innerHTML=series.map(s=>`<span><i style="background:${s.color}"></i>${escapeHtml(s.name)}</span>`).join('');
+  balChart.set({labels,series,tipFmt:idx=>{let h=`<b>経過${idx}年</b> <span style="opacity:.7">(${inp.sy+idx}年頃)</span>`;
+    series.forEach(s=>{const v=s.data[idx];if(v==null)return;h+=`<div class="row"><i style="background:${s.color}"></i>${escapeHtml(s.name)}: ${man(v*10000)}万円</div>`;});return h;}});
+  const bl=agg.yearly.map(y=>y.e+'年');
+  brkChart.set({labels:bl,segments:[{name:'元金',color:COL.blue,data:agg.yearly.map(y=>(y.principal+y.extra)/10000)},{name:'利息',color:COL.orange,data:agg.yearly.map(y=>y.interest/10000)}],
+    tipFmt:idx=>{const y=agg.yearly[idx];return `<b>${y.e}年目</b> <span style="opacity:.7">(${y.calYear}年)</span>`+
+      `<div class="row"><i style="background:${COL.blue}"></i>元金: ${yen(y.principal+y.extra)}円</div><div class="row"><i style="background:${COL.orange}"></i>利息: ${yen(y.interest)}円</div>`+
+      (y.extra>0?`<div class="row" style="opacity:.8">うち繰上: ${yen(y.extra)}円</div>`:'');}});
+}
+function padLine(arr,maxYears){const out=arr.slice();while(out.length<maxYears+1)out.push(0);return out;}
+function renderAmort(agg){ const body=$('amort_body');body.innerHTML='';
+  agg.yearly.forEach(y=>{ const tr=document.createElement('tr');tr.className='yr-row'; const pay=y.principal+y.interest+y.extra;
+    tr.innerHTML=`<td>${y.e}年目 <span style="color:#9aa3b2;font-weight:400">(${y.calYear}年)</span></td><td>${yen(pay)}</td><td>${yen(y.principal)}</td><td>${yen(y.interest)}</td><td>${y.extra>0?yen(y.extra):'–'}</td><td>${yen(y.endBal)}</td>`;
+    const detail=document.createElement('tbody');detail.style.display='none';
+    tr.addEventListener('click',()=>{tr.classList.toggle('open');if(detail.dataset.built!=='1'){buildMonthly(detail,y);detail.dataset.built='1';}detail.style.display=detail.style.display==='none'?'':'none';});
+    body.appendChild(tr);body.appendChild(detail); });
+  $('amort_note').textContent=`各行をクリックすると月ごとの明細を表示します（${agg.elapsed}年分）。`;
+}
+function buildMonthly(tbody,y){ const rows=lastResult.rows,s=(y.e-1)*12,t=Math.min(y.e*12,rows.length);
+  for(let k=s;k<t;k++){const r=rows[k];const mo=document.createElement('tr');mo.className='mo-row';const cm=((+$('n_sm').value-1)+k)%12+1;
+    mo.innerHTML=`<td>${k+1}回目 (${cm}月)</td><td>${yen(r.payment)}</td><td>${yen(r.principal)}</td><td>${yen(r.interest)}</td><td>${r.extra>0?yen(r.extra):'–'}</td><td>${yen(r.balance)}</td>`;tbody.appendChild(mo);}
+}
+
+/* プラン */
+function loadPlans(){try{return JSON.parse(localStorage.getItem(LS_PLANS))||[];}catch(e){return [];}}
+function savePlans(p){localStorage.setItem(LS_PLANS,JSON.stringify(p));}
+$('plan_save').addEventListener('click',()=>{const inp=readLoan();const name=prompt('プラン名を入力',`借入${inp.principalMan}万・${inp.ratePct}%・${inp.years}年`);
+  if(!name)return;const plans=loadPlans();plans.push({id:Date.now(),name,inp,checked:true});savePlans(plans);renderPlans();recalcLoan();});
+function planResult(plan){const inp=plan.inp;const pps=(inp.prepayments||[]).map(p=>({month:p.years*12+p.months,amountYen:Math.round(p.amountMan*10000),type:p.type}));
+  const res=simulate(Math.round(inp.principalMan*10000),inp.ratePct,inp.years,pps,bandsOpt(inp.red));return {res,agg:aggregate(res,inp.sy,inp.sm)};}
+function getSelectedPlans(){return loadPlans().filter(p=>p.checked).map(p=>{const r=planResult(p);return {...p,_res:r.res,_agg:r.agg};});}
+function renderPlans(){const plans=loadPlans(),box=$('plan_list');box.innerHTML='';
+  plans.forEach(p=>{const r=planResult(p);const el=document.createElement('div');el.className='plan-item';
+    el.innerHTML=`<input type="checkbox" ${p.checked?'checked':''}><span class="nm">${escapeHtml(p.name)}</span><span class="sm">毎月 ${yen(r.res.baseMonthly)}円 / 総額 ${man(r.res.totalPayment)}万円</span><button class="del" title="削除">🗑</button>`;
+    el.querySelector('input').addEventListener('change',e=>{const list=loadPlans(),t=list.find(x=>x.id===p.id);if(t){t.checked=e.target.checked;savePlans(list);}recalcLoan();});
+    el.querySelector('.del').addEventListener('click',()=>{savePlans(loadPlans().filter(x=>x.id!==p.id));renderPlans();recalcLoan();});box.appendChild(el);});
+  if(!plans.length)box.innerHTML='<div class="note" style="margin:0">まだ保存されたプランはありません。「現在の条件をプランとして保存」を押してください。</div>';
+}
+function renderCompare(){const sel=getSelectedPlans(),wrap=$('cmp_wrap');if(!sel.length){wrap.style.display='none';return;}wrap.style.display='';
+  const cols=[{name:'現在の条件',inp:readLoan(),res:lastResult,me:true},...sel.map(p=>({name:p.name,inp:p.inp,res:p._res}))];
+  $('cmp_head').innerHTML='<th>項目</th>'+cols.map(c=>`<th>${escapeHtml(c.name)}</th>`).join('');
+  const rd=[['借入額',c=>man(c.inp.principalMan*10000)+'万円'],['金利',c=>c.inp.ratePct+'%'],['期間',c=>c.inp.years+'年'],
+    ['毎月返済額',c=>yen(c.res.baseMonthly)+'円'],['総支払額',c=>yen(c.res.totalPayment)+'円'],['利息総額',c=>yen(c.res.totalInterest)+'円'],['完済まで',c=>termStr(c.res.months)]];
+  $('cmp_body').innerHTML=rd.map(r=>`<tr><td>${r[0]}</td>`+cols.map(c=>`<td class="${c.me?'me':''}">${r[1](c)}</td>`).join('')+'</tr>').join('');
+}
+
+/* ===================== 資産運用タブ ===================== */
+const invChart=new Chart($('c_invest'),$('tip_invest'),'line');
+const cmpChart=new Chart($('c_cmp'),$('tip_cmp'),'line');
+let invAccount='nisa';
+function readInvest(){return {monthlyMan:+$('in_monthly').value||0,ratePct:+$('in_rate').value||0,years:+$('in_years').value||1,
+  initMan:+$('in_init').value||0,expensePct:+$('in_exp').value||0,taxRate:+$('in_tax').value||0,account:invAccount};}
+
+function recalcInvest(){ const inp=readInvest(); updateBadges('b_irate',inp.ratePct);
+  updateBadges('b_imonthly',inp.monthlyMan); updateBadges('b_iyears',inp.years);
+  const monthly=Math.round(inp.monthlyMan*10000), init=Math.round(inp.initMan*10000);
+  const simNoFee=investSim(monthly,inp.ratePct,inp.years,init,{expensePct:inp.expensePct});
+  const simIdeco=investSim(monthly,inp.ratePct,inp.years,init,{expensePct:inp.expensePct,monthlyFee:171});
+  const nisaTake=simNoFee.final, nisaGain=simNoFee.gain;
+  const tokuTax=Math.max(0,simNoFee.gain)*TAXRATE, tokuTake=simNoFee.final-tokuTax, tokuGain=nisaGain-tokuTax;
+  const idecoSave=simIdeco.contrib*(inp.taxRate/100), idecoTake=simIdeco.final, idecoGain=simIdeco.gain+idecoSave;
+  const sel=inp.account, mainSim=sel==='ideco'?simIdeco:simNoFee;
+  let take,gain,sub;
+  if(sel==='nisa'){take=nisaTake;gain=nisaGain;sub='NISA：運用益すべて非課税';}
+  else if(sel==='tokutei'){take=tokuTake;gain=tokuGain;sub=`特定口座：売却益に20.315%課税後（税 約${man(tokuTax)}万円）`;}
+  else {take=idecoTake;gain=idecoGain;sub=`iDeCo：節税 約${man(idecoSave)}万円含む（手数料171円/月控除済）`;}
+  $('iv_yr2').textContent=inp.years;
+  $('ik_final').textContent=yen(take); $('ik_finalsub').textContent=sub;
+  $('ik_principal').textContent=yen(mainSim.contrib); $('ik_gain').textContent=yen(gain);
+  $('ik_mult').textContent=mainSim.contrib>0?(take/mainSim.contrib).toFixed(2):'–';
+  const accs=[
+    {k:'nisa',name:'NISA（非課税）',take:nisaTake,gain:nisaGain,note:'運用益すべて非課税'},
+    {k:'tokutei',name:'特定口座',take:tokuTake,gain:tokuGain,note:`売却益に20.315%課税`},
+    {k:'ideco',name:'iDeCo',take:idecoTake,gain:idecoGain,note:`掛金所得控除で節税 約${man(idecoSave)}万円（受取時は控除内と仮定）`}];
+  $('acc_body').innerHTML=accs.map(a=>`<tr style="${a.k===sel?'background:var(--green-50)':''}"><td style="font-weight:700">${a.name}</td><td style="font-weight:700;color:var(--green)">${yen(a.take)}円</td><td>${yen(a.gain)}円</td><td style="color:var(--sub);font-size:12px;text-align:left">${a.note}</td></tr>`).join('');
+  const labels=[]; for(let e=0;e<=inp.years;e++)labels.push(e===0?'開始':e+'年');
+  invChart.set({labels,series:[
+    {name:'評価額',color:COL.green,width:2.8,fill:'rgba(37,157,99,0.12)',data:mainSim.valLine.map(v=>v/10000)},
+    {name:'元本',color:COL.gray,width:2,data:mainSim.conLine.map(v=>v/10000)}],
+    tipFmt:idx=>{const v=mainSim.valLine[idx],c=mainSim.conLine[idx];return `<b>${idx}年後</b>`+
+      `<div class="row"><i style="background:${COL.green}"></i>評価額: ${man(v)}万円</div><div class="row"><i style="background:${COL.gray}"></i>元本: ${man(c)}万円</div><div class="row" style="opacity:.85">含み益: ${man(v-c)}万円</div>`;}});
+  drawCompareChart(inp,mainSim,sel);
+  saveInvest(inp); renderInvTable(mainSim);
+}
+function loanInterestSavedCurve(loanInp, monthlyExtraYen, maxYears){
+  const P=Math.round(loanInp.principalMan*10000), opt=bandsOpt(loanInp.red);
+  const base=simulate(P,loanInp.ratePct,loanInp.years,[],opt);
+  const pps=[]; for(let m=1;m<=loanInp.years*12;m++)pps.push({month:m,amountYen:monthlyExtraYen,type:'shorten'});
+  const pre=simulate(P,loanInp.ratePct,loanInp.years,pps,opt);
+  const cum=(rows,e)=>{let s=0,t=Math.min(e*12,rows.length);for(let k=0;k<t;k++)s+=rows[k].interest;return s;};
+  const curve=[0]; for(let e=1;e<=maxYears;e++)curve.push(Math.max(0,cum(base.rows,e)-cum(pre.rows,e)));
+  return {curve,totalSaved:base.totalInterest-pre.totalInterest,preMonths:pre.months,baseMonths:base.months};
+}
+function drawCompareChart(inp,mainSim,sel){
+  const loanInp=readLoan(), monthlyExtra=Math.round(inp.monthlyMan*10000), maxYears=inp.years;
+  const saved=loanInterestSavedCurve(loanInp,monthlyExtra,maxYears);
+  const netGain=[0];
+  for(let e=1;e<=maxYears;e++){ const y=mainSim.yearly[e-1]; let g=y?y.gain:0;
+    if(sel==='tokutei') g=Math.max(0,g)*(1-TAXRATE);
+    else if(sel==='ideco') g=g+(y?y.contrib:0)*(inp.taxRate/100);
+    netGain.push(g); }
+  const labels=[]; for(let e=0;e<=maxYears;e++)labels.push(e===0?'開始':e+'年');
+  cmpChart.set({labels,series:[
+    {name:'投資の手取り運用益',color:COL.green,width:2.6,data:netGain.map(v=>v/10000)},
+    {name:'繰上返済の利息軽減',color:COL.blue,width:2.6,data:saved.curve.map(v=>v/10000)}],
+    tipFmt:idx=>`<b>${idx}年後</b><div class="row"><i style="background:${COL.green}"></i>投資の手取り運用益: ${man(netGain[idx])}万円</div><div class="row"><i style="background:${COL.blue}"></i>利息軽減: ${man(saved.curve[idx])}万円</div>`});
+  const gF=netGain[maxYears], sF=saved.curve[maxYears], diff=gF-sF, win=diff>=0?'投資':'繰上返済';
+  const accName={nisa:'NISA',tokutei:'特定口座',ideco:'iDeCo'}[sel];
+  $('verdict').innerHTML=`毎月 <b>${inp.monthlyMan}万円</b> を ${maxYears}年間：<br>`+
+    `📈 投資（${accName}・年利${inp.ratePct}%・手数料${inp.expensePct}%）の手取り運用益 ＝ <b>約${man(gF)}万円</b>　／　🏠 繰上返済の利息軽減 ＝ <b>約${man(sF)}万円</b>`+
+    `（繰上で約${termStr(saved.baseMonths-saved.preMonths)}短縮）<br>→ 単純比較では <b style="color:${diff>=0?'var(--green)':'var(--blue)'}">${win}が約${man(Math.abs(diff))}万円 有利</b>。`+
+    `<span style="color:var(--sub)"> 投資は元本割れの可能性あり、繰上返済は確実。リスク許容度で判断を。</span>`;
+}
+function renderInvTable(mainSim){ const body=$('inv_body');body.innerHTML='';
+  mainSim.yearly.forEach(y=>{const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${y.e}年後</td><td>${yen(y.yearContrib)}</td><td>${yen(y.contrib)}</td><td>${yen(y.gain)}</td><td style="font-weight:700;color:var(--green)">${yen(y.val)}</td>`;body.appendChild(tr);});
+}
+
+/* ===== 永続化・初期化 ===== */
+function saveInputs(inp){localStorage.setItem(LS_INPUT,JSON.stringify(inp));}
+function saveInvest(inp){localStorage.setItem(LS_INV,JSON.stringify(inp));}
+function applyLoan(inp){ $('n_principal').value=inp.principalMan;$('r_principal').value=Math.min(20000,inp.principalMan);
+  $('n_rate').value=inp.ratePct;$('r_rate').value=Math.min(5,inp.ratePct); $('n_years').value=inp.years;$('r_years').value=Math.min(50,inp.years);
+  $('n_sy').value=inp.sy;$('n_sm').value=inp.sm;
+  $('v_principal').textContent=(+inp.principalMan).toLocaleString();$('v_rate').textContent=inp.ratePct;$('v_years').textContent=inp.years;
+  const rd=inp.red||{}; $('rd_on').checked=!!rd.on; ['zeh','a','b','iji','area2','area1','iju','chuko','young'].forEach(k=>$('rd_'+k).checked=!!rd[k]);
+  $('rd_kids').value=rd.kids||0; $('rd_body').style.display=rd.on?'':'none';
+  prepayments=(inp.prepayments||[]).map(p=>({...p})); }
+function applyInvest(inp){ $('in_monthly').value=inp.monthlyMan;$('ir_monthly').value=Math.min(50,inp.monthlyMan);
+  $('in_rate').value=inp.ratePct;$('ir_rate').value=Math.min(10,inp.ratePct); $('in_years').value=inp.years;$('ir_years').value=Math.min(50,inp.years);
+  $('in_init').value=inp.initMan;$('ir_init').value=Math.min(5000,inp.initMan);
+  $('in_exp').value=inp.expensePct;$('ir_exp').value=Math.min(2,inp.expensePct); $('in_tax').value=inp.taxRate;$('ir_tax').value=Math.min(55,Math.max(5,inp.taxRate));
+  invAccount=inp.account||'nisa';
+  $('iv_monthly').textContent=inp.monthlyMan;$('iv_rate').textContent=(+inp.ratePct).toFixed(1);$('iv_years').textContent=inp.years;
+  $('iv_init').textContent=(+inp.initMan).toLocaleString();$('iv_exp').textContent=(+inp.expensePct).toFixed(2);$('iv_tax').textContent=inp.taxRate;
+  $('acc_seg').querySelectorAll('.seg-btn').forEach(b=>b.classList.toggle('active',b.dataset.acc===invAccount)); }
+
+let curTab='loan';
+function activateTab(name){ curTab=name;
+  $('panel-loan').style.display=name==='loan'?'':'none'; $('panel-invest').style.display=name==='invest'?'':'none';
+  $('tab-loan').classList.toggle('active',name==='loan'); $('tab-invest').classList.toggle('active',name==='invest');
+  if(name==='loan')recalcLoan(); else recalcInvest(); }
+
+function init(){ const now=new Date(); $('today').textContent=`${now.getFullYear()}年${now.getMonth()+1}月`;
+  let li={principalMan:7000,ratePct:2.95,years:39,sy:now.getFullYear(),sm:now.getMonth()+1,
+    red:{on:false,zeh:false,a:false,b:false,iji:false,area2:false,area1:false,iju:false,chuko:false,kids:0,young:false},prepayments:[]};
+  try{const s=JSON.parse(localStorage.getItem(LS_INPUT));if(s&&s.principalMan){li=s; if(!li.red)li.red={on:false};}}catch(e){}
+  applyLoan(li);
+  let ii={monthlyMan:10,ratePct:5,years:39,initMan:0,expensePct:0.1,taxRate:20,account:'nisa'};
+  try{const s=JSON.parse(localStorage.getItem(LS_INV));if(s&&s.monthlyMan!=null)ii=Object.assign(ii,s);}catch(e){}
+  applyInvest(ii);
+  ['r_principal','r_rate','r_years','ir_monthly','ir_rate','ir_years','ir_init','ir_exp','ir_tax'].forEach(id=>setRangeFill($(id)));
+  makeBadges('b_principal','n_principal','r_principal','v_principal',[3000,4000,5000,7000,10000],v=>v>=10000?(v/10000)+'億':v.toLocaleString()+'万',recalcLoan);
+  makeBadges('b_rate','n_rate','r_rate','v_rate',[0.5,1.0,1.5,2.0,2.95],v=>(v+'').replace(/(\.\d*?)0+$/,'$1').replace(/\.$/,'')+'%',recalcLoan);
+  makeBadges('b_years','n_years','r_years','v_years',[20,25,30,35,39],v=>v+'年',recalcLoan);
+  makeBadges('b_irate','in_rate','ir_rate','iv_rate',[1,3,4,5,6,7],v=>v+'%',recalcInvest);
+  makeBadges('b_imonthly','in_monthly','ir_monthly','iv_monthly',[1,3,5,10,20,30],v=>v+'万',recalcInvest);
+  makeBadges('b_iyears','in_years','ir_years','iv_years',[20,25,30,35,39],v=>v+'年',recalcInvest);
+  syncPair('r_principal','n_principal','v_principal',v=>v.toLocaleString(),recalcLoan);
+  syncPair('r_rate','n_rate','v_rate',v=>v,recalcLoan);
+  syncPair('r_years','n_years','v_years',v=>v,recalcLoan);
+  $('n_sy').addEventListener('input',recalcLoan); $('n_sm').addEventListener('input',recalcLoan);
+  // フラット35 ポイント制
+  $('rd_on').addEventListener('change',recalcLoan);
+  ['rd_iji','rd_area2','rd_area1','rd_iju','rd_chuko','rd_young'].forEach(id=>$(id).addEventListener('change',recalcLoan));
+  $('rd_kids').addEventListener('input',recalcLoan);
+  document.querySelectorAll('.s-ex').forEach(el=>el.addEventListener('change',()=>{ if(el.checked)document.querySelectorAll('.s-ex').forEach(o=>{if(o!==el)o.checked=false;}); recalcLoan(); }));
+  // 投資
+  syncPair('ir_monthly','in_monthly','iv_monthly',v=>v,recalcInvest);
+  syncPair('ir_rate','in_rate','iv_rate',v=>(+v).toFixed(1),recalcInvest);
+  syncPair('ir_years','in_years','iv_years',v=>v,recalcInvest);
+  syncPair('ir_init','in_init','iv_init',v=>v.toLocaleString(),recalcInvest);
+  syncPair('ir_exp','in_exp','iv_exp',v=>(+v).toFixed(2),recalcInvest);
+  syncPair('ir_tax','in_tax','iv_tax',v=>v,recalcInvest);
+  $('acc_seg').querySelectorAll('.seg-btn').forEach(b=>b.addEventListener('click',()=>{ invAccount=b.dataset.acc;
+    $('acc_seg').querySelectorAll('.seg-btn').forEach(o=>o.classList.toggle('active',o===b)); recalcInvest(); }));
+  renderPP(); renderPlans(); recalcLoan();
+}
+init();
+</script>
+</body>
+</html>
