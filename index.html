@@ -505,7 +505,7 @@ function syncPair(rangeId,numId,labelId,fmt,onChange){ const r=$(rangeId),nu=$(n
   r.addEventListener('input',()=>upd('r')); nu.addEventListener('input',()=>upd('n')); }
 
 /* ===================== ローンタブ ===================== */
-const LS_INPUT='loansim_input_v4', LS_PLANS='loansim_plans_v3', LS_INV='loansim_invest_v4';
+const LS_INPUT='loansim_input_v5', LS_PLANS='loansim_plans_v3', LS_INV='loansim_invest_v4';
 let prepayments=[], lastResult=null, lastAgg=null;
 const balChart=new Chart($('c_balance'),$('tip_balance'),'line');
 const brkChart=new Chart($('c_break'),$('tip_break'),'bar');
@@ -721,7 +721,7 @@ function activateTab(name){ curTab=name;
 
 function init(){ const now=new Date(); $('today').textContent=`${now.getFullYear()}年${now.getMonth()+1}月`;
   let li={principalMan:7000,ratePct:2.96,years:39,sy:now.getFullYear(),sm:now.getMonth()+1,
-    red:{on:false,zeh:false,a:false,b:false,iji:false,area2:false,area1:false,iju:false,chuko:false,kids:0,young:false},prepayments:[]};
+    red:{on:true,zeh:true,a:false,b:false,iji:false,area2:false,area1:false,iju:false,chuko:false,kids:2,young:false},prepayments:[]};
   try{const s=JSON.parse(localStorage.getItem(LS_INPUT));if(s&&s.principalMan){li=s; if(!li.red)li.red={on:false};}}catch(e){}
   applyLoan(li);
   let ii={ratePct:5,years:39,expensePct:0.1,taxRate:20,tok:{m:0,init:0},nisa:{m:10,init:250},ideco:{m:2.3,init:150}};
