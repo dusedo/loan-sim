@@ -455,7 +455,7 @@ class Chart{
     const yFor=v=>pad.t+plotH*(1-v/yMax);
     ctx.font='11px sans-serif';ctx.fillStyle='#8a93a3';ctx.strokeStyle='#EDF0F5';ctx.lineWidth=1;
     for(let i=0;i<=4;i++){const v=yMax*i/4,y=yFor(v);ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+plotW,y);ctx.stroke();
-      ctx.textAlign='right';ctx.textBaseline='middle';ctx.fillText(man(v),pad.l-7,y);}
+      ctx.textAlign='right';ctx.textBaseline='middle';ctx.fillText(Math.round(v).toLocaleString(),pad.l-7,y);}
     if(this.hover>=0){const hx=this.type==='line'?this._xL(this.hover,n,pad,plotW):this._xB(this.hover,n,pad,plotW);
       ctx.strokeStyle='#C9D2E0';ctx.setLineDash([4,3]);ctx.beginPath();ctx.moveTo(hx,pad.t);ctx.lineTo(hx,pad.t+plotH);ctx.stroke();ctx.setLineDash([]);}
     ctx.fillStyle='#8a93a3';ctx.textAlign='center';ctx.textBaseline='top';
